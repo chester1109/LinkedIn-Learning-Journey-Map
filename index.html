@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta name="robots" content="noindex, nofollow">
+<title>LinkedIn Learning Journey Map</title>
+<!--
+  ══════════════════════════════════════════════════════════════════
+  LinkedIn Learning 全球學習進度地圖 — 單一自包含 HTML(無外部相依)
+  ══════════════════════════════════════════════════════════════════
+  給 IT 的佈署/接資料說明:
+
+  1. 本檔可直接放上任何靜態網站或 iframe 嵌入,不需要任何 CDN、
+     字型或 JS 函式庫,亦不發出任何對外請求。活動照片放在同層的
+     photos/ 資料夾(相對路徑),上架時整個資料夾一起搬。
+  2. 所有「測試資料」集中在下方 <script> 開頭的 DASHBOARD_DATA 物件:
+       - totals      三個頂部統計磁貼
+       - deltas      三個磁貼的「較上週」增量(設 null 可隱藏該列)
+       - sites       五個據點(參與人數 participants、啟動率 activationRate、
+                     完成課程 courses、經緯度 lon/lat、資訊卡位置 card、
+                     活動花絮 event:activities[name,src,emoji,caption,
+                     quotes[text,who]] / likes / teamsUrl)
+       - topLearners Top 10 Learner 排行(name / site / hours,
+                     依 hours 自動排序取前 10 名)
+       - updatedAt   最後更新時間;null = 顯示頁面載入時間
+     之後接正式 API 時,取得同結構的資料後呼叫 renderDashboard(apiData)
+     即可整頁重繪(也可先覆寫全域變數 DASHBOARD_DATA 再呼叫
+     renderDashboard(),兩種寫法皆可)。
+  3. 新增據點:在 sites 加一筆,填入 lon / lat(WGS84),
+     地圖標記位置會由內建 project() 自動換算;card.x / card.y 為
+     資訊卡左上角在 1000x470 座標系中的位置,自行挑一塊海面即可。
+  4. 世界地圖(大洲形狀 + 城市燈光)由 Natural Earth 110m(公有領域)
+     資料預先計算並內嵌於 SVG,無需維護;重新產生方式見 tools/README.md。
+  5. 據點卡片可點擊 → 活動花絮彈窗:
+       - 一張輪播 = 一個活動(activities 陣列),第一個固定放 AI Literacy Journey;
+         標題、活動名與留言區會跟著目前輪播的活動切換。
+       - activities[].src 填入照片網址(訓練網站上的相對路徑即可)就會
+         顯示真實照片;留空則顯示佔位圖卡。照片規格:16:9(建議
+         1280x720),非 16:9 會置中裁切。
+       - teamsUrl 填該據點 Teams 頻道連結;留空會隱藏按鈕("#" 為 demo
+         哨兵,點了不跳頁)。
+       - 「打氣」數 = likes 基數 + 使用者本機的 +1(存 localStorage);
+         跨使用者的即時總數需另接後端 API 時,覆寫 likes 即可。
+       - 深連結:網址帶 #site=據點ID(如 #site=WYMY)直接開啟彈窗。
+-->
+<script>
+  /* 主題早期定調:先於畫面渲染套上 data-theme,避免載入時閃一下錯色。
+     優先用使用者存過的選擇(llmap-theme),否則跟隨系統 prefers-color-scheme。 */
+  (function () {
+    try {
+      var saved = localStorage.getItem("llmap-theme");
+      var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", saved || (dark ? "dark" : "light"));
+    } catch (err) {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  })();
+</script>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page:        #f2f5fa;
+    --card:        #ffffff;
+    --ink:         #14213b;
+    --ink-2:       #5a6b85;
+    --ink-3:       #5d6d84;
+    --brand:       #0a66c2;
+    --brand-deep:  #0d3b66;
+    --hairline:    rgba(20, 33, 59, 0.10);
+    --tile-shadow: 0 1px 2px rgba(16, 34, 61, 0.05), 0 8px 24px rgba(16, 34, 61, 0.06);
+    --good:        #0c7a3d;
+    /* 深色地圖面板 */
+    --panel-1:     #0a1c36;
+    --panel-2:     #10294e;
+    --panel-ink:   #ffffff;
+    --panel-ink-2: #b8cbe4;
+    --panel-ink-3: #7e94b5;
+    --panel-line:  rgba(184, 203, 228, 0.14);
+    --glow:        #ffc94d;
+    --glow-soft:   rgba(255, 201, 77, 0.16);
+    --teal:        #2dd4bf;
+  }
+  /* 深色主題:由 <html data-theme="dark"> 觸發(JS 依使用者選擇/系統設定設定)。
+     頁首腳本已先套上 data-theme,因此不再直接依賴 @media,改由屬性驅動可手動切換。 */
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:        #0d1320;
+    --card:        #162034;
+    --ink:         #eef3fb;
+    --ink-2:       #a7b6cc;
+    --ink-3:       #8b9fb8;
+    --brand:       #5aa4e8;
+    --brand-deep:  #cfe2f5;
+    --hairline:    rgba(255, 255, 255, 0.10);
+    --tile-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --good:        #3ecf7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    line-height: 1.55;
+  }
+  .page { max-width: 1280px; margin: 0 auto; padding: 28px 24px 40px; position: relative; z-index: 1; }
+  /* ── 可切換背景(預設/星空/極光)── */
+  #bgFx {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(3px 3px at 22% 24%, rgba(255,255,255,0.95), rgba(150,190,255,0.35) 45%, transparent 72%),
+      radial-gradient(3px 3px at 74% 18%, rgba(255,255,255,0.95), rgba(200,170,255,0.35) 45%, transparent 72%),
+      radial-gradient(2.6px 2.6px at 54% 66%, rgba(255,255,255,0.92), rgba(150,220,220,0.35) 45%, transparent 72%),
+      radial-gradient(3px 3px at 88% 60%, rgba(255,255,255,0.92), rgba(150,190,255,0.32) 45%, transparent 72%),
+      radial-gradient(1.8px 1.8px at 12% 16%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 34% 40%, #fff, transparent),
+      radial-gradient(2px 2px at 44% 12%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 64% 34%, #fff, transparent),
+      radial-gradient(1.8px 1.8px at 82% 40%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 8% 62%, #fff, transparent),
+      radial-gradient(1.6px 1.6px at 30% 78%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 50% 90%, #fff, transparent),
+      radial-gradient(1.8px 1.8px at 68% 86%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 92% 78%, #fff, transparent),
+      radial-gradient(1.6px 1.6px at 20% 52%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 96% 22%, #fff, transparent),
+      radial-gradient(42% 32% at 18% 22%, rgba(56,96,224,0.30), transparent 70%),
+      radial-gradient(46% 36% at 82% 28%, rgba(130,70,240,0.28), transparent 70%),
+      radial-gradient(48% 40% at 62% 82%, rgba(24,170,190,0.22), transparent 72%),
+      radial-gradient(34% 26% at 42% 56%, rgba(232,96,140,0.16), transparent 70%),
+      radial-gradient(92% 34% at 50% 112%, rgba(90,164,232,0.40), transparent 70%),
+      radial-gradient(130% 100% at 50% -12%, #24407e 0%, #172a5e 32%, #0f1c42 62%, #0a1330 100%);
+  }
+  #bgFx::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(1.4px 1.4px at 18% 30%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 40% 20%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 62% 44%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 76% 64%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 30% 66%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 88% 34%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 52% 80%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 10% 46%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 70% 12%, #fff, transparent),
+      radial-gradient(1.4px 1.4px at 26% 88%, #fff, transparent);
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  #bgFx::after {
+    content: ""; position: absolute; top: 10%; left: 0;
+    width: 160px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), #fff);
+    box-shadow: 0 0 6px 1px rgba(255,255,255,0.5);
+    opacity: 0; transform: translate(-180px, 0) rotate(16deg);
+    animation: shoot 8s ease-in infinite;
+  }
+  @keyframes twinkle { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  @keyframes shoot {
+    0% { opacity: 0; transform: translate(-180px, 0) rotate(16deg); }
+    3% { opacity: 1; }
+    15% { opacity: 0; transform: translate(66vw, 24vh) rotate(16deg); }
+    100% { opacity: 0; transform: translate(66vw, 24vh) rotate(16deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { #bgFx::before { animation: none; } #bgFx::after { display: none; } }
+
+  /* ── 頁首 ─────────────────────────────── */
+  .hero { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .overline { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: var(--brand); text-transform: uppercase; }
+  .hero h1 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 700; letter-spacing: 0.01em; color: var(--ink); margin-top: 2px; }
+  .hero .sub { font-size: 15px; color: var(--ink-2); margin-top: 4px; }
+  .hero-baseline { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+  .hero-lead { display: flex; align-items: center; gap: 12px; }
+  .title-mark { flex: none; width: 46px; height: 46px; display: grid; place-items: center; animation: markGlow 3.4s ease-in-out infinite; border-radius: 50%; }
+  .title-mark svg { width: 46px; height: 46px; display: block; }
+  @keyframes markGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(90, 164, 232, 0.45)); } 50% { filter: drop-shadow(0 0 14px rgba(90, 164, 232, 0.8)); } }
+  @media (prefers-reduced-motion: reduce) { .title-mark { animation: none; } }
+  .hero-baseline .sub { margin-top: 0; }
+  .hero-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--hairline); border-radius: 999px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--ink-2);
+    box-shadow: var(--tile-shadow);
+  }
+  .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); animation: livepulse 2.4s ease-in-out infinite; }
+  @keyframes livepulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .hero-tools { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 12px; }
+  .theme-toggle {
+    flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--hairline); color: var(--ink-2);
+    cursor: pointer; box-shadow: var(--tile-shadow);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--brand); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  /* 淺色時顯示月亮(點了切深色);深色時顯示太陽(點了切淺色) */
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+  /* 頁首主要行動:前往 LinkedIn Learning(固定 LinkedIn 藍,深淺色皆維持白字對比約 5.7:1) */
+  .cta-ll {
+    flex: none; display: inline-flex; align-items: center; gap: 8px;
+    background: #0a66c2; color: #ffffff; text-decoration: none;
+    border: none; border-radius: 999px; padding: 10px 18px;
+    font-size: 14px; font-weight: 650; letter-spacing: 0.01em; white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(10, 102, 194, 0.25), 0 6px 18px rgba(10, 102, 194, 0.28);
+    transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .cta-ll:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .cta-ll:active { transform: translateY(0); }
+  .cta-ll:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }
+  .cta-ll svg { width: 18px; height: 18px; flex: none; }
+  .cta-ll .arrow { transition: transform 0.2s; }
+  .cta-ll:hover .arrow { transform: translateX(3px); }
+  :root[data-theme="dark"] .cta-ll { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(10, 102, 194, 0.42); }
+
+  /* 語言切換(繁中 / EN)分段按鈕 */
+  .lang-toggle { flex: none; display: inline-flex; align-items: center; gap: 2px; background: var(--card); border: 1px solid var(--hairline); border-radius: 999px; padding: 2px; box-shadow: var(--tile-shadow); }
+  .lang-toggle button { border: none; background: transparent; color: var(--ink-2); cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 650; line-height: 1; padding: 6px 11px; border-radius: 999px; transition: background 0.2s, color 0.2s; }
+  .lang-toggle button:hover { color: var(--ink); }
+  .lang-toggle button.on { background: var(--brand); color: #ffffff; }
+  :root[data-theme="dark"] .lang-toggle button.on { color: #0d1b30; }
+  .lang-toggle button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  /* ── 達標型 KPI + 合規卡 ── */
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+  .kpi { background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; padding: 16px 18px; box-shadow: var(--tile-shadow); display: flex; flex-direction: column; }
+  .kpi-head { display: flex; align-items: flex-start; gap: 10px; }
+  .kpi-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+  .kpi-ic svg { width: 19px; height: 19px; }
+  .kpi-tt { flex: 1; min-width: 0; }
+  .kpi-label { font-size: 13.5px; font-weight: 650; color: var(--ink); }
+  .kpi-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  .kpi-tag { flex: none; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.02em; }
+  .kpi-body { margin-top: 12px; display: flex; align-items: baseline; gap: 7px; }
+  .kpi-val { font-size: 30px; font-weight: 680; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi-target { font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .kpi-note { margin-top: 5px; font-size: 12px; font-weight: 600; }
+  .note-good { color: var(--good); }
+  .note-warn { color: #b47800; }
+  .note-bad { color: #c0392b; }
+  .kpi-sites { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--hairline); }
+  .kpi-sites-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; background: transparent; border: none; padding: 3px 0; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .kpi-sites-toggle:hover { color: var(--ink); }
+  .kpi-sites-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+  .kpi-sites-toggle .chev { flex: none; width: 15px; height: 15px; transition: transform 0.2s; }
+  .kpi-sites-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .kpi-sites-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+  .kpi-sites-list[hidden] { display: none; }
+  .kpi-site { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+  .kpi-site .cmark { flex: none; width: 13px; text-align: center; font-weight: 700; }
+  .kpi-site .code { flex: 1; color: var(--ink-2); font-weight: 600; }
+  .kpi-site .r { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .tone-green .kpi-ic { background: rgba(12, 122, 61, 0.10); color: var(--good); }
+  .tone-green .kpi-val { color: var(--good); }
+  .tone-green .kpi-tag { background: rgba(12, 122, 61, 0.10); color: var(--good); }
+  .tone-amber .kpi-ic { background: rgba(180, 120, 0, 0.12); color: #b47800; }
+  .tone-amber .kpi-val { color: #b47800; }
+  .tone-amber .kpi-tag { background: rgba(180, 120, 0, 0.12); color: #b47800; }
+  .tone-blue .kpi-ic { background: rgba(10, 102, 194, 0.10); color: var(--brand); }
+  .tone-blue .kpi-val { color: var(--brand); }
+  .tone-blue .kpi-tag { background: rgba(10, 102, 194, 0.10); color: var(--brand); }
+  :root[data-theme="dark"] .tone-amber .kpi-val { color: #ffd166; }
+  :root[data-theme="dark"] .tone-amber .kpi-ic { background: rgba(255, 201, 77, 0.12); color: #ffd166; }
+  :root[data-theme="dark"] .tone-amber .kpi-tag { background: rgba(255, 201, 77, 0.12); color: #ffd166; }
+  :root[data-theme="dark"] .note-warn { color: #ffd166; }
+  :root[data-theme="dark"] .note-bad { color: #f2705f; }
+
+  .compliance { background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; padding: 18px 20px; box-shadow: var(--tile-shadow); margin-bottom: 14px; }
+  .comp-ic { background: rgba(12, 122, 61, 0.10); color: var(--good); }
+  .comp-metric { background: rgba(20, 33, 59, 0.06); color: var(--ink-2); }
+  .comp-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+  .comp-figure { flex: none; }
+  .comp-progress { flex: 1 1 160px; min-width: 140px; }
+  .comp-track { height: 10px; border-radius: 6px; background: rgba(10, 102, 194, 0.14); overflow: hidden; }
+  .comp-track i { display: block; height: 100%; border-radius: 6px; background: var(--brand); }
+  :root[data-theme="dark"] .comp-track { background: rgba(90, 164, 232, 0.24); }
+  .comp-val { font-size: 34px; font-weight: 680; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .comp-gap { text-align: right; }
+  .comp-gap-v { display: block; font-size: 15px; font-weight: 700; color: var(--good); font-variant-numeric: tabular-nums; }
+  .comp-sites { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 14px 6px; }
+  .comp-site { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 0 4px; }
+  .comp-site + .comp-site { border-left: 1px solid var(--hairline); }
+  .comp-site .cs-top { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; line-height: 1; }
+  .comp-site .code { color: var(--ink-2); font-weight: 600; letter-spacing: 0.02em; }
+  .comp-site .cmark { font-weight: 700; font-size: 13px; }
+  .comp-site .r { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .st-good { color: var(--good); }
+  .st-warn { color: #b47800; }
+  .st-bad { color: #c0392b; }
+  :root[data-theme="dark"] .st-warn { color: #ffd166; }
+  :root[data-theme="dark"] .st-bad { color: #f2705f; }
+  :root[data-theme="dark"] .comp-metric { background: rgba(255, 255, 255, 0.08); color: var(--ink-2); }
+  /* ── 活動推播牆 ── */
+  .bcast { margin-bottom: 14px; }
+  .bcast-view { position: relative; border-radius: 18px; overflow: hidden; box-shadow: var(--tile-shadow); }
+  .bslide { display: none; position: relative; aspect-ratio: 2.33 / 1; min-height: 330px; padding: 26px 30px; color: #ffffff; overflow: hidden; }
+  .bslide.on { display: block; }
+  .tone-party { background: linear-gradient(120deg, #5b21b6 0%, #be185d 55%, #1d4ed8 100%); }
+  .tone-challenge { background: linear-gradient(120deg, #0f766e 0%, #1d4ed8 100%); }
+  .tone-leader { background: linear-gradient(120deg, #b45309 0%, #ea580c 100%); }
+  .bdeco { position: absolute; inset: 0; z-index: 0; }
+  .bdeco::before { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: rgba(255, 255, 255, 0.09); top: -130px; right: -70px; }
+  .bdeco::after { content: ""; position: absolute; width: 240px; height: 240px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); bottom: -110px; left: 26%; }
+  .bdeco-img { background-size: cover; background-position: center; }
+  .bdeco-img::before { content: none; }
+  .bdeco-img::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background: linear-gradient(to top, rgba(8, 16, 34, 0.62) 0%, rgba(8, 16, 34, 0) 46%), linear-gradient(90deg, rgba(8, 16, 34, 0.92) 0%, rgba(8, 16, 34, 0.6) 60%, rgba(8, 16, 34, 0.42) 100%); }
+  .bslide-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; height: 100%; min-height: 278px; justify-content: space-between; }
+  .bhead-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .bhead { min-width: 0; }
+  .btag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(255, 255, 255, 0.2); padding: 3px 10px; border-radius: 999px; }
+  .btitle { font-size: clamp(22px, 3vw, 32px); font-weight: 800; margin-top: 10px; color: #ffffff; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25); }
+  .bsub { font-size: 15px; margin-top: 6px; color: rgba(255, 255, 255, 0.94); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35); }
+  .bfeatures { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
+  .bfeatures li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #ffffff; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .bck { flex: none; width: 15px; height: 15px; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: #16a34a; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+  .bsteps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bsteps span { font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .bsteps .bgift { background: rgba(255, 255, 255, 0.92); color: #7c3aed; border-color: transparent; }
+  .bcta { flex: none; align-self: flex-start; background: #ffffff; color: #1d3b66; font-weight: 700; font-size: 14px; text-decoration: none; padding: 11px 22px; border-radius: 999px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22); transition: filter 0.2s, transform 0.2s; }
+  .bcta:hover { filter: brightness(0.95); transform: translateY(-1px); }
+  .bcast-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 18px; line-height: 1; z-index: 3; display: grid; place-items: center; }
+  .bcast-btn:hover { background: rgba(0, 0, 0, 0.5); }
+  .bcast-prev { left: 12px; }
+  .bcast-next { right: 12px; }
+  .bcast-dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; gap: 7px; justify-content: center; z-index: 3; }
+  .bcast-dots button { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0; cursor: pointer; background: rgba(255, 255, 255, 0.5); }
+  .bcast-dots button.on { background: #ffffff; }
+  /* ── 遊戲感 / 引導 ── */
+  .lb li .rank.medal { background: none; box-shadow: none; font-size: 20px; }
+  .bcta { animation: bctaPulse 2.4s ease-in-out infinite; }
+  @keyframes bctaPulse { 0%, 100% { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22); } 50% { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18), 0 0 0 6px rgba(255, 255, 255, 0.22); } }
+  .confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+  .confetti-p { position: fixed; transform: translate(-50%, -50%); will-change: transform, opacity; animation: confPop 1s ease-out forwards; }
+  @keyframes confPop { 0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(35deg); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bcta { animation: none; } }
+  @media (max-width: 640px) { .bslide { padding: 20px; min-height: 0; aspect-ratio: auto; } .bslide-inner { min-height: 0; } .bcta { width: 100%; text-align: center; } }
+
+  /* ── 統計磁貼 ─────────────────────────── */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+  .tile {
+    background: var(--card); border: 1px solid var(--hairline); border-radius: 16px;
+    padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--tile-shadow);
+  }
+  .tile .icon {
+    flex: none; width: 46px; height: 46px; border-radius: 12px;
+    display: grid; place-items: center;
+  }
+  .tile .icon svg { width: 24px; height: 24px; }
+  .tile:nth-child(1) .icon { background: rgba(10, 102, 194, 0.10); color: #0a66c2; }
+  .tile:nth-child(2) .icon { background: rgba(13, 148, 136, 0.10); color: #0d9488; }
+  .tile:nth-child(3) .icon { background: rgba(180, 120, 0, 0.12); color: #b47800; }
+  :root[data-theme="dark"] .tile:nth-child(1) .icon { background: rgba(90, 164, 232, 0.14); color: #7ab8f0; }
+  :root[data-theme="dark"] .tile:nth-child(2) .icon { background: rgba(45, 212, 191, 0.12); color: #4fd8c6; }
+  :root[data-theme="dark"] .tile:nth-child(3) .icon { background: rgba(255, 201, 77, 0.12); color: #ffd166; }
+  :root[data-theme="dark"] .rate-bar { background: rgba(90, 164, 232, 0.28); }
+  .tile .label { font-size: 13px; color: var(--ink-2); }
+  .tile .value { font-size: 30px; font-weight: 650; line-height: 1.15; color: var(--ink); }
+  .tile .delta { font-size: 12.5px; color: var(--good); font-weight: 600; margin-top: 1px; }
+  .tile .delta .vs { color: var(--ink-3); font-weight: 400; }
+
+  /* ── 地圖面板 ─────────────────────────── */
+  .board {
+    display: grid; grid-template-columns: minmax(0, 1fr) 288px; gap: 0;
+    background: linear-gradient(160deg, var(--panel-1) 0%, var(--panel-2) 100%);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 2px 6px rgba(6, 18, 38, 0.18), 0 18px 48px rgba(6, 18, 38, 0.22);
+  }
+  .mapcol { min-width: 0; padding: 22px 10px 12px 24px; display: flex; flex-direction: column; }
+  .map-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-right: 12px; }
+  .map-head h2 { font-size: 19px; font-weight: 700; color: var(--panel-ink); letter-spacing: 0.02em; }
+  .map-head .tag { font-size: 13px; color: var(--panel-ink-2); }
+  .mapwrap { position: relative; margin-top: 4px; }
+  .mapwrap svg { display: block; width: 100%; height: auto; }
+
+  .map-foot {
+    margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    border-top: 1px solid var(--panel-line); padding: 10px 12px 4px 0; font-size: 12.5px; color: var(--panel-ink-3);
+  }
+  .map-foot .hint { display: inline-flex; align-items: center; gap: 7px; }
+  .map-foot .hint .spark { width: 9px; height: 9px; border-radius: 50%; background: var(--glow); box-shadow: 0 0 8px 2px var(--glow-soft); }
+
+  /* SVG 內部 */
+  .land {
+    fill: url(#landGrad);
+    stroke: rgba(126, 178, 232, 0.28);
+    stroke-width: 0.6;
+    filter: drop-shadow(0 0 9px rgba(46, 104, 178, 0.35));
+  }
+  .leader { stroke: rgba(184, 203, 228, 0.45); stroke-width: 1.2; stroke-dasharray: 3 3; fill: none; }
+  .beam   { opacity: 0.75; }
+  .halo   { fill: var(--glow); opacity: 0.16; transform-box: fill-box; transform-origin: center; animation: halo 3s ease-in-out infinite; }
+  .core   { fill: var(--glow); stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.6; }
+  @keyframes halo { 0%,100% { transform: scale(1); opacity: 0.14; } 50% { transform: scale(1.45); opacity: 0.30; } }
+  .site:hover .halo { opacity: 0.4; }
+
+  .scard {
+    width: 100%; height: 100%;
+    background: rgba(13, 32, 61, 0.82);
+    border: 1px solid rgba(184, 203, 228, 0.22);
+    border-radius: 10px; padding: 8px 11px 9px;
+    color: var(--panel-ink);
+    transition: border-color 0.2s, background 0.2s;
+    font-family: inherit;
+  }
+  .site:hover .scard { border-color: rgba(255, 201, 77, 0.55); background: rgba(16, 40, 74, 0.92); }
+  .scard { line-height: 1.25; }
+  .scard .s-name { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scard .s-city { font-size: 10.5px; font-weight: 400; color: var(--panel-ink-2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scard .s-count { margin-top: 2px; font-size: 12px; color: var(--panel-ink-2); display: flex; align-items: center; gap: 5px; }
+  .scard .s-count svg { width: 13px; height: 13px; color: var(--teal); flex: none; }
+  .scard .s-count b { font-size: 16px; font-weight: 650; color: var(--panel-ink); }
+  .scard .meter { margin-top: 5px; height: 5px; border-radius: 3px; background: var(--glow-soft); overflow: hidden; }
+  .scard .meter i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--glow); transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .scard .s-rate { margin-top: 3px; font-size: 10.5px; color: var(--panel-ink-3); transition: opacity 0.18s; }
+
+  /* 窄螢幕:SVG 內的資訊卡會縮到不可讀,改在地圖下方鋪一排原尺寸卡片 */
+  .site-list { display: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; padding-right: 12px; }
+  .site-list .scard { height: auto; }
+
+  /* 據點卡可點擊:懸停顯示提示,聚焦顯示外框 */
+  .site { cursor: pointer; }
+  .scard { position: relative; cursor: pointer; }
+  .scard .s-hint {
+    position: absolute; left: 11px; right: 11px; bottom: 9px;
+    font-size: 10.5px; color: var(--glow); opacity: 0;
+    transition: opacity 0.18s; pointer-events: none; white-space: nowrap;
+  }
+  .site:hover .s-hint, .scard:hover .s-hint, .scard:focus-visible .s-hint { opacity: 1; }
+  .site:hover .s-rate, .scard:hover .s-rate, .scard:focus-visible .s-rate { opacity: 0; }
+  .scard:focus-visible { outline: 2px solid var(--glow); outline-offset: -2px; } /* 內縮:foreignObject 會裁掉外凸的外框 */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* 觸控裝置沒有 hover:列表卡的提示常駐顯示 */
+  .site-list .scard .s-hint { position: static; opacity: 1; display: block; margin-top: 4px; }
+  .site-list .scard:hover .s-rate, .site-list .scard:focus-visible .s-rate { opacity: 1; }
+
+  /* ── 活動花絮彈窗 ─────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(7, 14, 28, 0.62);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal {
+    width: min(560px, 100%); max-height: min(88vh, 760px); max-height: min(88dvh, 760px); overflow: auto;
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--hairline); border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(4, 12, 28, 0.45);
+    padding: 20px 22px 18px;
+    animation: pop 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  }
+  @keyframes pop { from { transform: scale(0.94); opacity: 0; } }
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .modal-head .ev-site { font-size: 12.5px; font-weight: 700; color: var(--brand); letter-spacing: 0.05em; }
+  .modal-head h3 { font-size: 20px; line-height: 1.3; margin-top: 2px; }
+  .modal-close {
+    flex: none; border: none; background: transparent; cursor: pointer;
+    font-size: 20px; line-height: 1; color: var(--ink-2); padding: 8px; border-radius: 10px;
+  }
+  .modal-close:hover { background: var(--hairline); color: var(--ink); }
+
+  .carousel { position: relative; margin-top: 14px; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; background: var(--panel-1); }
+  .carousel .slides { position: absolute; inset: 0; }
+  /* 底部漸層墊片:真實照片偏亮時,導覽圓點仍看得見 */
+  .carousel::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34px;
+    background: linear-gradient(transparent, rgba(6, 14, 30, 0.55));
+    pointer-events: none; z-index: 1;
+  }
+  .carousel .slide { position: absolute; inset: 0; display: none; }
+  .carousel .slide.on { display: block; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slide .ph {
+    width: 100%; height: 100%; display: grid; place-content: center; justify-items: center; gap: 8px;
+    background: linear-gradient(150deg, #16335c, #0f2547 55%, #24406c); color: #dbe7f7; text-align: center; padding: 12px;
+  }
+  .slide .ph .emoji { font-size: 46px; line-height: 1; }
+  .slide .ph .cap { font-size: 13px; color: #b8cbe4; }
+  .car-btn {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+    width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(10, 20, 40, 0.55); color: #fff; font-size: 18px; line-height: 1;
+    display: grid; place-items: center;
+  }
+  .car-btn:hover { background: rgba(10, 20, 40, 0.85); }
+  .car-prev { left: 10px; }
+  .car-next { right: 10px; }
+  .car-dots { position: absolute; bottom: 9px; left: 0; right: 0; z-index: 2; display: flex; gap: 7px; justify-content: center; }
+  .car-dots button { width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0; cursor: pointer; background: rgba(255, 255, 255, 0.38); }
+  .car-dots button.on { background: var(--glow); }
+
+  .ev-meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--ink-2); }
+  .ev-meta b { color: var(--ink); }
+  .ev-quotes { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .ev-quotes blockquote {
+    font-size: 13px; color: var(--ink-2);
+    background: rgba(10, 102, 194, 0.06); border-left: 3px solid var(--brand);
+    padding: 8px 12px; border-radius: 0 8px 8px 0;
+  }
+  .ev-quotes .who { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  :root[data-theme="dark"] .ev-quotes blockquote { background: rgba(90, 164, 232, 0.08); }
+  /* 深色的 --brand 偏亮,白字對比不足,改深色字(拉高權重以蓋過後方的基礎規則) */
+  :root[data-theme="dark"] .ev-actions .btn-primary { color: #0d1b30; }
+  .ev-actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand); color: #fff; border: none; border-radius: 999px;
+    padding: 9px 18px; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none;
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-like {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid var(--hairline); color: var(--ink-2);
+    border-radius: 999px; padding: 8px 16px; font-size: 13.5px; cursor: pointer;
+  }
+  .btn-like:hover { border-color: rgba(224, 86, 120, 0.45); color: var(--ink); }
+  .btn-like.liked { color: #d0435f; border-color: rgba(224, 86, 120, 0.45); background: rgba(224, 86, 120, 0.08); }
+  :root[data-theme="dark"] .btn-like.liked { color: #f08aa2; }
+  .btn-board { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--hairline); color: var(--ink-2); border-radius: 999px; padding: 8px 16px; font-size: 13.5px; cursor: pointer; font-family: inherit; }
+  .btn-board:hover { border-color: var(--brand); color: var(--ink); }
+  .btn-board:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .ev-board { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .ev-board[hidden] { display: none; }
+  .ev-board input, .ev-board textarea { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 13.5px; color: var(--ink); background: var(--page); border: 1px solid var(--hairline); border-radius: 10px; padding: 8px 11px; resize: vertical; }
+  .ev-board input:focus, .ev-board textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15); }
+  .ev-board-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .ev-board-hint { flex: 1; min-width: 130px; font-size: 11.5px; color: var(--ink-3); }
+  .ev-quotes blockquote.mine { border-left-color: var(--teal); background: rgba(45, 212, 191, 0.08); }
+
+  /* ── 最新動態 ─────────────────────────── */
+  .feed {
+    border-left: 1px solid var(--panel-line);
+    padding: 22px 20px; display: flex; flex-direction: column; min-width: 0;
+    background: rgba(8, 20, 40, 0.35);
+  }
+  .feed h2 { font-size: 15px; font-weight: 700; color: var(--panel-ink); letter-spacing: 0.03em; display: flex; align-items: center; gap: 8px; }
+  .feed h2 .live { font-size: 10.5px; font-weight: 600; color: var(--teal); border: 1px solid rgba(45, 212, 191, 0.4); border-radius: 999px; padding: 1px 8px; letter-spacing: 0.06em; }
+  .feed h2 .flame { flex: none; width: 18px; height: 18px; color: var(--glow); filter: drop-shadow(0 0 4px rgba(255, 201, 77, 0.45)); }
+  .feed ol.lb { list-style: none; margin-top: 10px; display: flex; flex-direction: column; }
+  .lb li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--panel-line); }
+  .lb li:last-child { border-bottom: none; }
+  .lb .rank {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12.5px; font-weight: 700;
+    color: var(--panel-ink-2); background: rgba(184, 203, 228, 0.10);
+  }
+  .lb li:nth-child(1) .rank { background: linear-gradient(135deg, #ffd97a, #ffc94d); color: #0a1c36; }
+  .lb li:nth-child(2) .rank { background: linear-gradient(135deg, #dce6f2, #b9c8dc); color: #0a1c36; }
+  .lb li:nth-child(3) .rank { background: linear-gradient(135deg, #e2b185, #c98e5a); color: #0a1c36; }
+  .lb .who { flex: 1; min-width: 0; }
+  .lb .who .nm { font-size: 13px; font-weight: 650; color: var(--panel-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb .who .st { font-size: 11px; color: var(--panel-ink-3); }
+  .lb .hrs { flex: none; text-align: right; font-size: 14px; font-weight: 650; color: var(--panel-ink); font-variant-numeric: tabular-nums; }
+  .lb .hrs span { font-size: 10.5px; font-weight: 400; color: var(--panel-ink-3); margin-left: 2px; }
+
+  /* ── 據點明細表 ───────────────────────── */
+  .detail { margin-top: 22px; background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; box-shadow: var(--tile-shadow); overflow: hidden; }
+  .detail h2 { font-size: 16px; font-weight: 700; padding: 16px 20px 0; }
+  .detail .note { font-size: 12.5px; color: var(--ink-3); padding: 2px 20px 12px; }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; }
+  th, td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--hairline); vertical-align: top; }
+  td:nth-child(2) { white-space: nowrap; }
+  th:first-child, td:first-child { padding-left: 20px; }
+  th:last-child, td:last-child { padding-right: 20px; }
+  thead th { font-size: 12px; font-weight: 600; color: var(--ink-2); border-top: none; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td .site-code { font-weight: 700; color: var(--ink); white-space: nowrap; }
+  td .addr { color: var(--ink-2); font-size: 12.5px; }
+  td .tel { white-space: nowrap; color: var(--ink-2); }
+  .rate-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .rate-bar { width: 64px; height: 5px; border-radius: 3px; background: rgba(10, 102, 194, 0.14); overflow: hidden; flex: none; }
+  .rate-bar i { display: block; height: 100%; border-radius: 3px; background: var(--brand); }
+
+  footer.pagefoot { margin-top: 18px; font-size: 12px; color: var(--ink-3); text-align: center; }
+
+  /* ── RWD ─────────────────────────────── */
+  @media (max-width: 960px) {
+    .board { grid-template-columns: 1fr; }
+    .feed { border-left: none; border-top: 1px solid var(--panel-line); }
+    .mapcol { padding: 18px 16px 10px; }
+    #worldmap .leader, #worldmap foreignObject { display: none; }
+    .site-list { display: grid; }
+  }
+  @media (max-width: 640px) {
+    .page { padding: 20px 14px 32px; }
+    .stats { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr; }
+    .tile .value { font-size: 26px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .halo, .hero-badge .dot { animation: none; }
+    .scard .meter i { transition: none; }
+    .modal { animation: none; }
+    .scard .s-hint { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="bgFx" aria-hidden="true"></div>
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-lead">
+      <span class="title-mark" aria-hidden="true"><svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" focusable="false"><radialGradient id="IconifyId17ecdb2904d178eab8950" cx="43.972" cy="29.066" r="90.951" gradientTransform="matrix(.6257 .78 -.5815 .4665 33.359 -18.792)" gradientUnits="userSpaceOnUse"><stop offset=".506" stop-color="#17a1f3"></stop><stop offset=".767" stop-color="#1b7ffa"></stop><stop offset=".962" stop-color="#1366f0"></stop><stop offset="1" stop-color="#1160ee"></stop></radialGradient><path d="M3.14 64.68c.68 24.4 16.99 59.55 61.45 59.1c43.32-.44 60.76-36.3 59.4-62.06c-1.37-25.76-21.66-57.46-61.79-57.23c-40.14.22-59.8 33.96-59.06 60.19z" fill="url(#IconifyId17ecdb2904d178eab8950)"></path><path d="M90.52 93.68c-.63-.24-1.1.35-1.75 1.45c-.65 1.1-1.35 2-1.8 2.35s-3.1 1.95-3.3 2.85c-.2.9 0 1.8 0 2.65c0 .85-.15 2.1-.15 2.65c0 .55-.6 1.05.2 1.85s1.4.3 1.95-.45s1.85-3.15 2.15-4.2c.2-.71.6-1.75.8-2.3c.2-.55 1.85-3.2 2.1-4.2c.26-1 .61-2.35-.2-2.65z" fill="#7add8a"></path><path d="M66.38 40.12c0 .36.26.73.93.73s.95-.42.9-.97c-.04-.51-.56-.67-1.01-.63c-.36.03-.82.3-.82.87z" fill="#bedc9d"></path><path d="M44.54 32.36c-.46-.02-1.2.41-1.25.82c-.11.98-.42 2.84.32 2.95c.68.1 1.03-1.09 1.14-1.54s.5-2.2-.21-2.23z" fill="#95da93"></path><path d="M41.06 16.97c-.89 0-1.48.76-1.62 1.22c-.15.5-.05 1.87-.47 2.05c-.57.24-1.48.06-2.08.25c-.78.25-2.4 1.73-2.36 2.08c.03.32.42 1.02 1.31 1.16c.3.05.61-.05.69-.24c.04-.1.25-.25.42-.19c.24.08.21.56.4.61c.19.05 2.2.08 2.44 0c.24-.08 1.49-.82 1.67-1.59c.19-.77.26-2.41.33-3.75c.07-1.15-.36-1.6-.73-1.6z" fill="#7add8a"></path><path d="M38.28 9.2s-1.54 1.91-2.5 2.81c-.96.9-2.63 2.2-2.47 2.84c.05.21.61.74 1.33.56c.72-.19 2.02-1.01 3.5-1.54c1.49-.53 2.49-.58 2.79-.72c.29-.13 3.56-1.75 4.83-2.31s6.13-1.96 7.27-2.36s1.99-.77 1.8-1.51c-.19-.74-2.44-.64-3.79-.64s-2.56-.4-2.56-.4s-3.29.76-5.69 1.57c-2.38.81-4.51 1.7-4.51 1.7z" fill="#ffffff"></path><path d="M69.22 8.02c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c-.63 3.2.1 8.55 0 9.92s.05 2.2-.68 2.94s-3.73 3.36-4.25 4.3s-.16 2.1-.52 3.41s-2.68 3.41-3.46 3.83s-.58 1.21-2.41 2.78s-2.41 2.1-3.2 2.2s-5.09.31-6.72-.31c-1.63-.63-2.73-1.63-3.2-2.15s-.94-1.1-1.68-1.52c-.73-.42-1.57-1.31-2.15-2.1s-2.15-2.89-3.67-4.56s-2.31-2.47-2.41-4.3s1.57-3.73 1.57-3.73s-.47-3.25-1.84-5.67s-3.2-2.83-4.3-5.3c-1.1-2.47-.58-4.41-.47-5.19s-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-1.99-2.47-3.25-2.52s-2.1.89-3.04.89s-1.42-.73-2.05-.63s-1.68 1.05-2.31 1.68s-1.1 1.21-1.21 1.47s.47 1.42-.26 1.89s-1.73.58-2.1.63s-1.68-.16-1.94.68s-.16 1.78.21 2.36s.52 1.15-.16 1.73s-1.26.73-1.68-.05c-.42-.79-.16-.84-.47-1.31s-1.21-1.94-1.57-3.04s-.63-1.89-1.26-2.62s-1.63-.79-2.31-1.42s-1.31-1.52-1.31-1.52s-.52.94.16 2.57s2.36 2.89 2.47 3.52s-.16 1.68-.63 1.68s-1.05-.52-1.73-1.31s-1.89-1.63-2.52-2.2s-1.36-3.04-1.73-3.1s-1.15 1.42-2.31 1.78s-2.15.42-2.15.42s-.73 1.68-1.73 2.2s-1.52.84-1.99 1.52s-1.1 1.94-1.57 2.41c-.47.47-1.78.84-2.2 1s-1.31.42-1.57.42s-1.68-.94-1.89-1.63c-.21-.68-.63-1.1-.63-1.57s1.21-2.36 1.52-3.25s.52-1.84 1.36-2.52s1.15 0 2.41.05s2.78-.1 2.78-.1s.16-.37.31-.73s.52-.31.42-.58s-1.31-1.05-1.42-1.63c-.1-.58.1-.79.52-1.05s.94-.73.94-.73s.31-.42 1-.68s1.31.42 1.78.26c.47-.16 1.78-.84 2.31-1.47s1.15-1.31 1.68-1.63s1.84-.42 2.31-.73s.47-1.05.89-1.21s1.05-.42 1.78.1s1.05 1.47 1.84 1.57s1.52-.21 1.84-.37s1-1.15 1.89-1.68c.89-.52 1.47-.84 1.94-1.36s.73-1 .73-1s1.36-.16 1.99-.31s2.31-.26 1.99-1.26s-1.52-.42-2.41-.26s-1.68.63-1.89.31s.73-1.42.94-1.78s.73-1 .05-1.42s-1.42.73-1.84 1.26s-1.15 1.42-1.15 1.42s.16.79.16 1.26s-.79 1.1-1.47 1.73s-1.26 1.52-2.1 1.47s-1.21-1.26-1.26-1.42s0-1-.26-1.05s-.84 1.1-1.84.94s-1.15-1.36-.58-2.52s1.68-1.47 2.52-1.89s1.57-.68 2.05-1.05s.63-.68.94-1.05s2.83-2.2 4.35-2.89s2.52-1.15 3.25-1.26c.73-.1 1.63-.16 2.31.31c.68.47 2.52 1.57 2.99 2.05s.84.89 1.84.68s3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.43.22-1.92-.31z" fill="#7add8a"></path><radialGradient id="IconifyId17ecdb2904d178eab8951" cx="64.332" cy="57.234" r="21.385" gradientTransform="matrix(.3201 -.9474 3.2189 1.0875 -140.493 55.94)" gradientUnits="userSpaceOnUse"><stop offset=".118" stop-color="#e3dda6"></stop><stop offset=".907" stop-color="#e3dda6" stop-opacity=".083"></stop><stop offset=".978" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M41.23 82.05c.1-.79-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-2-2.38-3.25-2.52c-2.91-.33-6.18-3.87-6.25-8.92c-.07-5.05 2.54-7.7 4.2-8.08c.99-.23 3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.42.22-1.92-.31c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c0 0-9.24 6.9-18.84 5.68c-10.11-1.31-20.61-10.75-20.55-11.15z" fill="url(#IconifyId17ecdb2904d178eab8951)"></path><radialGradient id="IconifyId17ecdb2904d178eab8952" cx="87.948" cy="42.632" r="18.619" gradientTransform="matrix(-.7604 -.6495 1.1303 -1.3232 106.636 156.165)" gradientUnits="userSpaceOnUse"><stop offset=".118" stop-color="#e3dda6"></stop><stop offset=".907" stop-color="#e3dda6" stop-opacity=".083"></stop><stop offset=".978" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M41.23 82.05c.1-.79-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-2-2.38-3.25-2.52c-2.91-.33-6.18-3.87-6.25-8.92c-.07-5.05 2.54-7.7 4.2-8.08c.99-.23 3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.42.22-1.92-.31c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c0 0-9.24 6.9-18.84 5.68c-10.11-1.31-20.61-10.75-20.55-11.15z" fill="url(#IconifyId17ecdb2904d178eab8952)"></path><radialGradient id="IconifyId17ecdb2904d178eab8953" cx="61.288" cy="118.76" r="17.892" gradientTransform="matrix(.2128 -.9771 1.9056 .4151 -178.069 129.348)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e3dda6"></stop><stop offset=".818" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M59.38 116.57c-1.67-.52-2.73-1.63-3.2-2.15s-.94-1.1-1.68-1.52c-.73-.42-1.57-1.31-2.15-2.1s-2.15-2.89-3.67-4.56s-2.31-2.47-2.41-4.3s1.57-3.73 1.57-3.73s-.47-3.25-1.84-5.67s-3.2-2.83-4.3-5.3c0 0 9.75-.92 17.91.92s21.02 9.26 21.02 9.26c-.1 1.36.05 2.2-.68 2.94s-3.73 3.36-4.25 4.3s-.16 2.1-.52 3.41s-2.68 3.41-3.46 3.83s-.58 1.21-2.41 2.78s-2.42 2.07-3.2 2.2c-.62.11-4.98.24-6.73-.31z" fill="url(#IconifyId17ecdb2904d178eab8953)"></path><path d="M79.53 25.46c-.78-.08-2.09 1.49-2.13 2.2s.19 1.68.49 1.94s2.09 1.16 2.5 1.75s.6 2.61 1.38 3.58s1.72 1.98 3.77 1.94s1.75-1.11 1.75-1.57c0-.78-2.43-3.43-3.4-4.37c-.97-.93-2.61-1.68-2.91-2.39s.26-1.23.04-1.79c-.22-.55-.74-1.22-1.49-1.29z" fill="#4b9ced"></path><path d="M72.46 83.86c-.3-.39-1.65-.45-2.1-.16s-1.13 2.42-.94 2.78c.19.36 1.49.26 1.94.1s1.42-2.3 1.1-2.72z" fill="#4186f1"></path></svg></span>
+      <h1 data-i18n="h1">LinkedIn Learning Journey Map</h1>
+    </div>
+    <div class="hero-baseline">
+      <div class="hero-left">
+        <p class="sub" data-i18n="sub">一起學習、一起點亮世界 — Your Growth Journey Starts Here.</p>
+        <div class="lang-toggle" role="group" data-i18n-aria="langLabel" aria-label="語言 / Language">
+        <button type="button" data-lang="zh">中</button>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="es">ES</button>
+      </div>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切換深色/淺色模式">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+        <div class="hero-badge"><span class="dot" aria-hidden="true"></span><span data-i18n="updatedEvery">數據每 1 小時更新</span>&ensp;·&ensp;<span id="lastUpdated">—</span></div>
+      </div>
+      <a class="cta-ll" id="ctaLearning" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+        <span data-i18n="cta">前往 LinkedIn Learning</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpiSection" data-i18n-aria="statsAria" aria-label="全球學習統計"></section>
+
+  <section class="compliance" id="complianceCard" data-i18n-aria="complianceAria" aria-label="AI 必修合規"></section>
+
+  <section class="bcast" id="bcastWall" data-i18n-aria="bcastAria" aria-label="活動推播"></section>
+
+  <section class="board">
+    <div class="mapcol">
+      <div class="map-head">
+        <h2 data-i18n="mapHead">全球據點即時進度</h2>
+        <span class="tag" data-i18n="mapTag">全球據點同步啟動 · 亮起你的學習足跡</span>
+      </div>
+      <div class="mapwrap">
+        <svg id="worldmap" viewBox="0 0 1000 470" role="group"
+             aria-label="全球據點學習進度地圖">
+          <defs>
+            <linearGradient id="landGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#264a75"/>
+              <stop offset="0.55" stop-color="#2c5484"/>
+              <stop offset="1" stop-color="#356093"/>
+            </linearGradient>
+            <radialGradient id="lightGrad">
+              <stop offset="0" stop-color="#ffdf94" stop-opacity="0.95"/>
+              <stop offset="0.35" stop-color="#ffc94d" stop-opacity="0.38"/>
+              <stop offset="1" stop-color="#ffc94d" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path id="landPath" class="land" fill-rule="evenodd" d="M311.8 462.5L315.4 464.6L319.3 465.4L318.1 467.2L315.4 467.4L314 466.1L313.1 467.5L310.7 468.6L307.7 468.2L305.7 467.2L302.8 466.7L299.3 464.7L296.4 462.8L292.6 458.9L294.9 459.6L298.8 462L302.5 463.2L303.9 461.6L304.8 459.2L307.4 457.8L309.3 458.2L310.4 459.8L311.8 462.5ZM337.4 452.8L339.6 454.4L338.8 455.6L335 456.7L333.8 455.4L331.4 457L330 455.4L333.3 453.3L335.7 454.2L337.4 452.8ZM695.2 447.9L691 448.2L690.9 446.3L691.3 444.9L693.3 445.2L695.9 445.7L695.2 447.9ZM903.9 416.7L906.6 417.9L908.1 417.4L910.2 416.7L911.9 417L912.1 421.1L911.2 422.3L910.9 425.1L908 426.6L905.7 426.3L904 423.3L903.6 421L902 418L902.1 416.3L903.9 416.7ZM980.6 417.1L981.2 418.6L983.2 417.1L984 418.6L984 420.1L983 421.7L981.2 424.3L979.8 425.7L980.8 427.4L978.6 427.4L976.3 428.8L975.5 431.1L973.9 434.6L971.8 436.2L970.4 437.2L967.8 437.1L966 435.9L963 435.7L962.5 434.4L964 431.8L967.5 428.3L969.3 427.7L971.3 426.4L973.7 424.5L975.3 422.7L976.6 420.1L977.6 419.2L978 417.2L980 415.6L980.6 417.1ZM985 400.4L987 404.1L987.1 401.7L988.4 402.7L988.8 405.3L991 406.4L992.9 406.7L994.5 405.4L995.9 405.8L995.2 408.9L994.4 411L992.2 410.9L991.5 412L991.8 413.5L990.3 416L988.9 418.4L986.8 419.8L985.1 418.4L986.7 415.5L985.8 413.6L982.8 412.2L982.9 410.9L984.9 409.7L985.4 407L985.3 404.7L984.1 402.3L982.9 400.3L980.7 397.2L979.5 394.7L980.6 394.4L982.1 396.4L984.2 397.3L985 400.4ZM964.2 351.3L963.2 352.1L961.6 351.2L959.7 349.6L957.9 347.8L956 345.3L955.6 344.1L956.8 344.2L958.4 345.3L959.6 346.5L962.8 349.7L964.2 351.3ZM995.5 334.4L996.4 335.4L996 337.2L994.3 337.7L992.7 337.3L992.5 335.8L993.5 334.5L994.8 335ZM998.2 332.5L996.5 333.3L996.1 331.9L997.5 331.2L1000 329.9L1000 331.6L998.2 332.5ZM966.2 331.3L964.4 330.3L966.2 331.3ZM964.2 326L964.6 328.8L963.3 328.5L962.9 324.9L964.2 326ZM639 321.1L639.5 325.3L640.2 327L639.9 328.7L639.4 329.7L638.5 327.6L638 328.7L638.5 331.3L638.3 332.8L637.3 336.6L636.2 340.6L634.9 345.5L633.1 352.1L632.1 357L630.8 361.1L628.6 361.9L626.1 363.4L624.5 362.5L622.3 361.2L621.6 359.4L621.4 356.3L620.4 353.5L620.2 350.9L620.6 348.4L621.9 347.8L621.9 346.6L623.3 344L623.5 341.8L622.9 340.1L622.3 337.9L622.1 334.6L623.1 332.7L623.5 330.5L624.8 330.3L626.4 329.6L627.4 329L628.6 328.9L630.2 326.9L632.5 324.8L633.3 323L633 321.5L634.1 321.9L635.7 319.5L635.7 317.4L636.7 315.8L637.6 317.3L638.4 318.8L639 321.1ZM898.8 321.9L899.8 324.6L901.6 323.3L902.5 324.8L903.8 326.1L903.5 327.7L904.1 330.7L904.5 332.5L906 335.9L905.7 337.7L906.6 340.1L909.6 341.9L911.6 343.6L913.5 345.1L914.7 348.2L915.8 351.9L916.9 351.2L918 352.7L919.2 355.9L921.1 358L922.4 359.4L924.6 362.2L925.4 365L925.4 367L925.3 369.2L926.6 372.2L926.4 375.3L925.9 376.9L925.2 380L925.2 382L924.7 384.6L923.5 387.8L921.4 389.5L920.4 392.2L919.5 393.9L918.7 397L917.6 398.7L916.9 401.3L916.5 403.7L916.7 404.8L915.1 406.1L912 406.2L909.4 407.6L908.1 409L906.4 410.5L904.1 408.9L902.4 408.3L902.9 406.5L901.3 407.2L898.9 409.7L896.5 408.8L894.9 408.2L893.4 407.9L890.7 406.9L888.9 404.8L888.4 402.1L887.7 400.3L886.3 398.9L883.7 398.5L884.6 396.8L883.9 394.2L882.6 396.6L880.1 397.3L881.5 395.3L882 393.3L883 391.6L882.8 389L880.5 392L878.8 393.2L877.7 396L875.6 394.5L875.7 392.7L873.9 390.1L872.5 388.8L869.4 385.9L867.5 385.8L864.8 384.1L859.8 384.4L856.2 385.6L853.1 386.8L850.4 386.6L847.5 388.4L845.1 389.2L844.5 391L843.5 392.5L841.1 392.5L839.4 392.8L836.9 392.2L834.9 392.6L833 392.8L831.4 394.6L829.2 395.5L827.8 396.6L825.8 396.4L824 396.4L821 394.2L819.5 393.5L819.6 391.5L821 391L821.3 389L821.7 386.5L821.4 384.5L819.9 380.9L819.4 378.9L819.6 376.9L818.4 374.6L818.4 373.6L817.1 372.2L816.8 369.5L815.2 366.7L814.8 365.2L816.1 366.7L815.1 363.4L816.5 364.5L817.3 365.8L817.3 364L815.9 361.3L815.6 360.2L815 359.1L815.3 357.1L816.2 354.5L815.9 352.4L817.1 349.9L817.3 352.6L818.5 350.1L820.7 349L822.1 347.5L824.2 346.2L825.5 345.9L828.4 345L830.1 344.7L831.3 343.6L832.8 343.6L835.7 342.6L837.2 341.1L837.9 339.2L839.6 337.4L839.7 336L839.8 334.1L841.7 331.1L842.9 334.2L844.1 333.5L843.1 331.8L843.9 330.1L845.2 330.9L845.5 328.2L847 326.5L847.7 325.1L849.1 324.5L850.3 323.9L851.6 322.5L853 322L855 323.7L856.6 325.7L858.3 325.8L860.1 326.1L859.5 324.2L860.8 321.3L862.1 320.4L862.8 317.6L864.5 316.3L865.9 316.7L868.3 316.1L868.2 314.3L866.2 313.1L867.7 312.6L869.5 313.5L871 314.9L873.3 315.8L875.8 316.5L877.5 315.5L878.5 315.8L880.4 316.9L879.7 318.8L878.6 320.2L878 321.7L877.2 323.5L876.2 325.2L878.6 328.1L880.7 329.2L882.2 330.5L884.2 332.5L886.4 333.4L886.8 334.5L889.5 335.7L891.3 334.5L891.9 332.6L892.4 331.1L892.8 329.1L893.6 326.4L893.2 324.7L893.4 323.6L893.1 321.6L893.5 319L893.6 317.1L894.2 315.2L894.8 313.3L894.8 312.3L895.9 311L896.7 312.7L896.9 314.9L897.7 316.8L898.7 318.6L898.9 320.6L898.8 321.9ZM950.3 310.3L951.1 311.6L949.2 311.5L948.1 309.4L949.8 310.2ZM835.3 309.5L834.2 309.6L830.5 307.1L833.1 306.4L834.5 307.5L835.5 308.6ZM946.8 308.2L945.7 308.3L944 307.9L943.6 306L945.5 306.6L946.8 308.2ZM949.1 307.3L946.6 304.9L946.1 302.8L948 305.6L949.1 307.3ZM845.7 309.1L843.3 309.9L843.2 308.3L844.4 306.2L847.1 304.8L849.9 303.2L851.8 303L853.7 303L852.7 304L849.8 305.5L847.5 306.5L845.7 309.1ZM827.5 302L828.5 302.9L830.2 302.6L830.9 304.1L827.7 304.8L825.8 305.3L824.3 305.3L825.2 303.2L826.8 303.2L827.5 302ZM841.4 302L841 303.9L836.8 304.9L833.1 304.5L833.1 303.2L835.3 302.5L837.1 303.5L838.9 303.3L841.4 302ZM944.1 302.8L942 302L940.5 300.8L939.5 299.6L941.2 300.1L943.4 301.7L944.1 302.8ZM937.6 299.4L935.8 298.8L934.7 297.3L936.5 298.2L937.6 299.4ZM801.7 297.4L807.1 297.7L807.7 296.3L812.8 297.9L813.8 300.2L818 300.9L821.4 302.9L818.2 304.3L815.2 302.9L812.7 303L809.8 302.7L807.2 302.1L804 300.7L801.9 300.4L800.8 300.8L795.7 299.4L795.2 297.9L792.7 297.6L794.6 294.3L798 294.5L800.2 295.8L801.4 296.1L801.7 297.4ZM874.2 295.4L872.8 297.8L872.5 295.1L873 293.9L873.6 292.7L874.2 293.7L874.2 295.4ZM933 297.5L931 296.5L929.8 294.3L929.2 291.6L930.7 293.1L932.1 295.3L933.4 296.5ZM922.2 292.8L920.7 293.1L918.8 294.9L917.3 295.7L915.9 295.7L913.6 294.7L912 293.7L912.2 292.7L914.7 293.2L916.2 292.9L916.7 291.2L917.3 293L918.9 292.7L919.7 291.5L921.2 290.3L920.9 288.2L922.6 288.1L923.1 290.7L922.2 292.8ZM853.5 285.7L852.4 286.9L850.5 286.2L850 284.7L852.8 284.6L853.5 285.7ZM862.4 284.4L863.4 287.1L861.1 285.7L858.8 285.4L857.2 285.6L855.3 285.5L855.9 283.6L859.4 283.4L862.4 284.4ZM925.4 289.4L924 288.2L923.4 286.9L922.1 285.7L920.5 284.2L918.5 283.2L920.8 283.3L922.9 284.9L924 286.4L925.1 287.5L925.4 289.4ZM872.6 277.6L873.4 283.3L876.3 285.4L878.6 281.7L881.8 279.6L884.2 279.6L886.6 280.8L888.7 282L891.7 282.7L896.5 285.1L901.6 287.1L903.5 288.9L905.1 290.7L905.5 292.8L910.1 294.9L910.8 296.8L908.3 297.2L908.9 299.5L911.3 301.8L913.2 305.5L914.7 305.4L914.6 307L916.8 307.5L918.9 309.7L918.6 310.7L916.7 310.9L913.7 309.6L910.9 309.1L908.7 306.9L907.1 304.9L905.7 301.9L902.1 300.3L899.7 301.3L898 302.5L898.4 305.1L896.2 306.3L894.6 305.7L891.8 305.6L889.3 302.7L886.5 302L882.3 303.1L883.4 300.2L885.2 299.3L884.5 295.4L883.1 292.5L877.7 289.5L875.5 289.2L871.3 286L870.5 287.7L869.4 288L868.8 286.7L868.8 285.2L866.6 283.5L869.6 282.2L871.6 282.3L867.3 281.3L866.2 279.3L863.7 278.6L862.6 276.9L866.3 276L867.7 274.9L872.2 276.3L872.6 277.6ZM847.9 268.6L845.7 272.1L843.6 272.8L840.9 272.1L836.3 272.2L833.8 272.7L833.4 275.4L835.9 278.5L837.4 276.9L842.6 275.7L842.4 277.4L841.2 276.8L840 278.9L837.5 280.3L840.2 284.8L839.6 286L842.1 290L842.1 292.3L840.6 293.3L839.5 292.1L840.9 289.2L838.2 290.6L837.8 288.3L835.8 286.2L836 282.8L834.2 283.9L834.4 288L834.5 293L832.8 293.5L831.6 292.5L832.4 289.2L831.9 285.8L830.8 285.8L829.9 283.4L831.1 281.1L831.5 278.3L832.8 273L833.4 271.6L835.8 269L838 270L841.5 270.5L844.7 270.4L847.4 267.8ZM857.5 269.6L857.3 272.7L855.9 272.3L855.5 274.5L856.6 276.3L854.7 274.5L853.9 270L854.4 267.2L855.4 266L855.6 267.9L857.2 268.2L857.5 269.6ZM793.9 294.1L790.9 294.2L788.5 291.3L785 288.4L783.8 286.3L781.7 283.4L780.3 280.8L778.2 275.9L775.7 272.9L774.9 269.9L773.9 267.2L771.4 265L769.9 262L767.8 260L764.9 256.1L764.7 254.4L766.5 254.5L770.8 255.2L773.2 258.6L775.4 261L776.9 262.4L779.6 266.2L782.4 266.3L784.7 268.7L786.3 271.6L788.4 273.2L787.3 276.1L788.9 277.3L790.4 279.8L791.4 281.8L793.4 282.1L794.7 284.3L794 288.7L793.9 294.1ZM827.4 267.2L830.5 270.4L827.3 270.8L826.3 273.2L826.4 276.4L823.8 278.8L823.7 282.3L822.6 287.7L822.2 286.4L819.1 288L818 285.8L816 285.6L814.6 284.5L811.3 285.8L810.3 284.1L808.5 284.3L806.2 283.9L805.8 279.2L804.4 278.2L803 275.2L802.6 272.1L803 268.9L804.6 266.5L806.7 267.7L808.8 267.1L809.4 264.1L810.5 263.5L813.9 262.7L815.9 259.9L817.2 257.7L818.3 256.4L820.7 254.5L822.8 252L824.2 249.3L825.4 249.3L826.8 251.1L826.9 252.6L828.7 253.6L831.1 254.6L830.9 256L829 256.2L829.5 257.9L827.5 259.1L825.9 262.2L827.9 265.6L827.4 267.2ZM851 244.1L851.3 246.4L851.5 248.4L850.5 251.6L849.5 248L848.2 249.8L849.1 252.4L848.3 254L845.1 252L844.3 249.4L845.1 247.8L843.4 246.1L842.5 247.6L841.2 247.4L839.1 249.4L838.7 248.4L839.8 245.4L841.5 244.4L843 243.1L844 244.7L846.1 243.7L846.6 242.2L848.5 242.1L848.4 239.3L850.6 241L850.9 242.8L851 244.1ZM725.6 251.8L723.2 252.6L721.9 249.9L721.4 244.8L722.6 239.1L724.6 241.1L725.8 243.5L727.2 247.2L726.8 250.8L725.6 251.8ZM330.7 238.1L328.4 238.5L328.7 237.2L328.7 235.8L330.3 235.4L330.7 238.1ZM844.4 237.5L843.4 238.7L842.5 240.9L841.7 241.9L839.9 239.5L841.2 237.6L841.5 235.4L843.1 235.2L842.6 237.6L844.7 234.2L844.4 237.5ZM829.2 240.9L825.5 244.2L826.8 241.8L828.9 239.6L830.5 237.2L832 233.7L832.5 236.6L830.6 238.5L829.2 240.9ZM838.6 231.9L840.2 233L842 233L841.9 234.4L840.7 235.9L838.9 237L838.8 235.3L839 233.5L838.6 231.9ZM848.6 230.9L849.4 234.8L847.3 233.9L847.3 235.1L848 237.2L846.7 238L846.6 235.6L845.3 233.3L846.9 233.5L846.9 232.2L845.2 229.5L847.9 229.6L848.6 230.9ZM837.6 227.7L836.8 230.8L835.6 229L834.2 226.3L836.6 226.5L837.6 227.7ZM837 208.7L838.7 209.7L839.8 209.7L839.4 211.1L840.3 213.6L839.6 216.5L838 217.7L837.5 220.5L838.1 223.3L839.6 223.7L840.8 223.3L844.3 225.2L844 227.2L844.7 229.6L842.5 227.9L841.5 226L840.8 227.3L839 225.2L836.5 225.8L835.1 225L835.2 223.5L835.3 221.8L834.9 223.1L833.5 221.1L833.1 219.5L833 216.2L834.1 217.3L834.4 211.9L835.3 208.7L837 208.7ZM317.8 209.6L315 210.5L313.4 210.6L313.2 209.1L315.9 208.6L317.3 209ZM286.4 210.9L284 210.9L282.4 209.7L283.9 208.6L286.4 209L287.9 209.9L286.4 210.9ZM298.4 203.9L300.8 204.4L303.3 203.9L305 204.8L306.2 205.9L307.7 205.8L307.6 206.9L308.9 207L310.2 208.3L309.2 209.7L307.9 209L306.6 209.1L305.2 209.6L304.1 209.8L302.8 209.5L301.7 211.9L300.8 210.3L299 209.7L297.7 209.9L296 209.7L294.7 210.3L293.2 209.2L293.4 208.1L296 208.6L298.1 208.9L299.1 208.1L297.8 206.6L297.8 205.2L296.1 204.7L298.4 203.9ZM806.5 208.1L804.1 209.8L801.8 208.7L801.7 205.6L803.1 204.1L806.1 203.1L807.7 203.2L808.4 204.5L807.1 206L806.5 208.1ZM67.9 206.6L66.8 206.7L66.5 204.5L66.9 202.8L68.3 203.2L70 205.2L68.8 206.1ZM66.4 201.2L65 200.7L66.7 200.8ZM278.7 193.7L279.8 195L282.4 194.6L285.7 197.6L287.4 199.2L290 199.9L291.9 201L293.9 202.4L291.8 203.7L289.9 203.9L288 203.6L284 203.9L285.9 202L284.7 201.1L283 200.8L282 199.8L281.3 197.8L279.8 198L277.2 197L272.7 195.7L272.8 194.2L270.1 194L268.1 195.8L266.9 195.9L265.1 197.1L264 196.8L265.4 195.7L266 194.4L267.3 193.7L268.7 193L270.8 192.6L273.9 192.5L276.1 192.5L278.7 193.7ZM284.6 190.2L283.2 188.4L282.2 187.4L282.8 185.2L284.6 188.2L284.6 190.2ZM836.6 193.6L835.4 196.5L833.9 193.6L833.6 191L835.3 187.5L837.5 184.9L838.8 185.9L838.3 188L836.6 193.6ZM283.8 180.4L280.8 180.9L280.6 179.6L281.9 179.3L283.8 179.4ZM286.1 180.3L285.6 182.8L285.2 180.5L283.9 179.1L286.1 180.3ZM874 153.8L874.4 155L872.8 157.1L871.6 156L870.2 156.8L869.5 158.9L867.7 157.9L867.7 156.2L869.2 154.1L870.8 154.5L872 153L874 153.8ZM596 148.5L594.2 150L591.6 152.3L590.3 151.9L589.6 150.5L590.9 150.3L593.5 149.5L596 148.5ZM565.8 148.3L567.4 149.5L569.5 149.3L571.6 149.6L573 149.8L572.7 150.8L568.7 151.1L565.3 149.8L565.8 148.3ZM543.1 139.5L542.1 142.2L542.5 143.3L541.9 145.1L539.8 143.8L538.4 143.4L534.5 141.7L534.9 139.9L538.2 140.2L541 139.8L543.1 139.5ZM525.6 129L527.2 131.5L526.9 136.2L525.6 135.9L524.5 137.1L523.4 136.2L523.3 132L522.7 130L524.2 130.1L525.6 129ZM891.6 143.3L890.6 146.1L891 147.9L889.6 150.3L886 152L881.2 152.2L877.2 156.2L875.3 154.9L875.2 152.2L870.4 153L867.1 154.7L863.9 154.7L866.7 157.3L864.8 163.3L863 164.7L861.7 163.4L862.4 160.2L860.6 159.2L859.5 156.8L862.1 155.7L863.6 153.5L866.3 151.7L868.4 149.3L873.9 148.3L876.9 149L879.8 142.7L881.6 144.4L885.7 140.9L887.3 139.5L889 135.3L888.6 131.3L889.7 129.1L892.7 128.4L894.2 133.3L894.1 136.2L891.6 139.7L891.6 143.3ZM526.6 125.7L525.6 128.4L524.4 127.7L523.7 125.4L524.3 124.1L526.1 122.7L526.6 125.7ZM899.8 118.6L901.7 119.4L903.7 117.9L904.3 121.8L900.2 122.8L897.7 126.3L893.4 123.9L891.9 127.7L888.8 127.8L888.4 124.3L889.8 121.6L892.7 121.4L893.5 116.5L894.4 113.8L897.6 117.5L899.8 118.6ZM323.2 110.3L325.2 110.8L327.7 110.7L326.4 112.1L325.3 112.4L321.8 110.9L321.1 109.7L322.2 108.6L323.2 110.3ZM328.3 101.3L327 101.4L323.4 100.3L320.8 98.7L325.4 99.2L328.2 100.7ZM156.9 103.4L155.5 103.9L151 102.3L150.1 101.1L147.6 99.9L144.3 98.2L143.2 96.3L146.4 96.3L148.1 96.8L150.7 97.2L151.6 98.4L153 100L155.8 101.5L156.9 103.4ZM344.1 95.8L342.2 98.9L344 97.7L345.9 98.4L344.9 99.7L347.4 100.6L348.7 99.8L351.5 100.8L350.6 103.4L352.5 102.8L352.9 104.7L353.8 106.9L352.6 109.9L351.3 110.1L349.5 109.4L350.1 106.5L346.1 109.1L344.5 109L346.4 107.4L343.7 106.5L340.8 106.7L335.4 106.6L334.9 105.6L336.7 104.3L335.5 103.4L337.8 101.3L340.7 95.7L342.4 93.7L344.8 92.5L346.1 92.6L344.1 95.8ZM131.4 84L134 83.8L133.2 87.7L135.6 90.6L134.5 90.6L132.8 89L131.8 87.3L130.4 86.2L129.9 84.7L130.1 83.6L131.4 84ZM899 95.6L901.8 101.8L897.7 100.6L896 105.7L898.7 109.3L898.6 111.8L896.5 109.6L894.7 112.4L894.2 109.4L894.5 106L894.2 102.2L894.8 99.6L894.9 94.9L893.3 91.4L893.6 86.6L896.1 85L895 83.4L896.3 82.9L897 85.2L897.9 88.6L897.9 92L899 95.6ZM481.1 90.3L476.2 92.4L472.3 91.8L474.5 88.2L473.1 84.6L476.9 81.8L479 80.2L481.3 80.1L484.3 82.2L482.8 84.6L483.2 87.1L481.1 90.3ZM535.3 78.5L533.6 81.4L530.7 79.4L530.3 77.9L534.4 76.8L535.3 78.5ZM75 73.3L72.2 74.6L70.8 73.7L70.4 72L72.9 70.8L74.4 70.3L76.2 70.5L77.4 71.6L75 73.3ZM491.7 67.9L488.7 71.7L491.5 71.2L494.6 71.3L493.8 74.1L491.3 77.3L494.2 77.5L496.9 82L498.8 82.6L500.5 86.5L501.3 87.9L504.7 88.6L504.3 90.8L502.9 91.9L504 93.7L501.5 95.5L497.8 95.5L493.1 96.5L491.8 95.8L490 97.4L487.4 97L485.4 98.3L484 97.6L488 94L490.5 93.2L486.2 92.6L485.4 91.2L488.3 90.1L486.7 88.2L487.3 86L491.4 86.3L491.8 84.2L489.9 82L486.5 81.4L486.9 78.9L484.5 79.6L484.3 76.2L482.9 74.4L483.9 70.8L486.1 67.9L488.3 68.2L491.7 67.9ZM40.1 63.5L38.4 64L36.5 63.3L34.8 62.4L37.6 61.8L39.8 62.1L40.1 63.5ZM279.8 55.6L278.7 57.4L277.5 57.1L276.8 56.1L278 54.8L279.1 54.8ZM272.5 53.6L269.3 55.6L267.3 55.5L268.7 52.9L272.6 52.9ZM23 49.9L24.7 50.5L26.4 50.2L28.7 51.1L31.4 51.6L29.1 52.7L27 51.9L25.9 51.3L23.5 51.5L23 49.9ZM263.4 43.3L264 44.8L265.4 44.3L267 45.2L270 46.4L273.2 47.5L273.5 49.2L275.5 48.9L277.5 50.1L275 51.2L270.7 50.3L269.1 48.7L266.4 50.6L262.4 52.4L261.5 50.4L257.7 50.7L260.1 49L260.5 46.2L261.4 43L263.4 43.3ZM459.7 40.5L459.1 42.8L462.2 45.2L458.6 47.8L450.6 50.2L448.2 50.9L444.5 50.4L436.8 49.2L439.5 47.7L433.5 46L438.4 45.3L438.3 44.3L432.4 43.5L434.3 41.2L438.5 40.6L442.8 43L447.1 41.1L450.6 42.1L455.1 40.2L459.7 40.5ZM289.3 38.1L286.1 38.2L285.5 36.5L286.6 34.6L289.2 34.1L291.3 35L291.4 36.5L289.3 38.1ZM13.8 40L15.7 40.9L15.1 38.4L22.6 38.9L28.1 42.2L25.3 43.7L20.7 44.1L20.7 47.5L19.6 48.2L17 48.1L14.9 46.9L11.2 45.9L10.5 44.3L7.7 43.8L4.6 44.2L3 43L3.6 41.7L0.3 42.5L1.6 44.2L0 45.7L0 31.7L6.8 34.4L14.1 37.9L13.8 40ZM234.3 31.2L232.6 32.4L228.8 31.4L226.6 31.7L222.8 30.2L225.2 29.1L227.2 27.6L230.1 28.6L231.8 29.2L234.3 31.2ZM1000 25.1L997 25.3L996.5 24.2L1000 22.7L1000 25.1ZM3.6 24.9L0 25.1L0 22.7L2.7 22.6L6.7 23.6L3.6 24.9ZM248.5 29.8L248.5 33.4L252.2 30.7L255.5 32.9L254.7 35.5L257.4 37.9L260.3 35.3L262.3 32.3L262.4 28.5L266.4 28.7L270.5 29.3L274.2 31L274.4 32.7L272.3 34.6L274.3 36.5L273.9 38.2L268.5 40.6L264.6 41.2L261.8 40.1L260.9 41.9L258.2 44.8L257.4 46.4L254.2 48.8L250.2 49L248 50.5L247.9 52.8L244.6 53.2L241.2 56L238.2 60L237.1 62.7L237 66.8L241.1 67.4L242.3 70.7L243.6 73.4L247.5 72.7L252.7 74.2L255.4 75.5L257.4 77.2L260.9 78.1L263.9 79.6L268.4 79.8L271.5 80.2L271 83.2L271.9 86.7L273.9 90.6L278 94L280.2 92.8L281.7 89.2L280.2 83.7L278.3 81.8L282.7 80.2L285.8 77.7L287.4 75.3L287.2 72.9L285.3 70L281.9 67.3L285.2 63.7L284 60.5L283 55L285 54.2L289.7 55.1L292.6 55.5L294.9 54.6L297.5 55.8L300.9 57.8L301.7 59.1L306.7 59.4L306.6 62.4L307.5 66.8L310.1 67.3L312.1 69.4L316.1 67.5L318.8 63.6L320.6 62L322.8 65.1L326.4 69.6L329.5 73.8L328.3 76L332 78L334.5 80L339 80.9L340.7 82L341.8 84.9L344 85.4L345.1 86.7L345.3 90.7L343.3 92L341.3 93.2L336.7 94.5L333.2 97.4L328.5 97.9L322.6 97.2L318.4 97.2L315.6 97.4L313.2 99.9L309.7 101.5L305.7 106.1L302.5 109.4L304.8 108.8L309.3 104.2L315.1 101.2L319.3 100.9L321.7 102.6L319.1 105L320 108.8L320.9 111.4L324.5 113.2L329.1 112.6L331.9 108.7L332.1 111.2L333.9 112.5L330.4 114.8L324.3 116.9L321.5 118.3L318.4 120.8L316.3 120.6L316.2 117.6L321 114.7L316.6 114.8L313.5 115.3L314 116.4L311 118.1L308.2 119.3L305.2 120.4L303.6 122.7L303.3 125.1L304.2 127L305.3 127L305 125.8L305.7 127.5L303.8 128.1L302.4 128L300.4 128.7L299.2 128.8L297.6 129L295.2 130L299.3 129.4L296.3 131.1L294.5 131.1L293.9 134.3L291.9 137L291.1 135.9L290.8 136.9L291.5 138.9L290.6 140.2L289.1 143L289.7 140.5L288.2 139.2L287.9 136.3L287.4 137.8L288 140L286.2 139.5L288.1 140.6L288.2 143.9L289.3 145.4L289.6 148.9L287.9 151.5L285 152.5L283.2 154.6L281.8 154.8L280.4 156.1L280 157.3L276.9 159.6L275.4 161.2L274.1 163.3L273.6 165.8L274.1 168.2L275.1 171.2L276.3 173.7L276.3 175.2L277.6 179.3L277.5 181.7L277.4 183L276.7 185.2L274.5 185.2L274.1 183.7L273 182.8L271.6 179.8L270.3 177.1L269.8 175.8L270.4 173.4L269.6 171.5L267.5 168.6L266.4 168L263.6 169.6L261.7 167.8L260 167L256.9 167.4L254.4 167L252.3 167.2L251.1 167.7L251.6 170.2L251.6 171.3L250.6 170.8L249.6 171.5L247.6 171.3L245.5 169.5L243.1 169.9L241 169.1L239.3 169.4L237 170.2L234.4 172.8L231.7 174.3L230.2 176L229.5 177.5L229.5 180L229.6 181.7L230.2 182.8L229.1 185.9L228.6 188.4L228.4 193.1L228.1 194.9L228.6 196.8L229.5 198.5L230 201.2L231.9 203.8L232.5 205.8L233.6 207.5L236.6 208.5L237.7 209.9L240.1 209L242.3 208.6L244.3 208L246.1 207.4L247.9 205.9L248.5 203.9L248.7 201L249.2 199.9L251.1 199L254 198.2L256.5 198.3L258.2 198L258.8 200.5L257.3 202.5L256.6 204.7L256.7 206.8L256 209.5L254.7 208.7L255.2 210.2L254.8 211.7L254.7 213.5L254.6 215.6L253.5 216.6L253 217.9L254.1 218L255.2 218.6L256.6 217.9L258.6 218.3L259.9 218.2L261.1 217.4L262.7 217.9L263.9 217.5L265.2 218L266.5 218.7L268.3 220L268.8 221.3L268.9 223.4L268.3 224.6L268 226L267.9 227.5L268.1 230L267.4 231.9L267.1 233.7L267.6 235.2L268.3 237.1L269.4 238.5L270.7 240L271.7 241.3L272.8 242.2L273.8 242.8L275.1 242.5L276.3 241.6L278 240.9L279 239.9L280.5 240.1L281.9 240.5L283.2 241.1L284.1 242.2L285.1 243.2L286.6 243.3L288.6 240.8L289.8 240.5L289.8 239.3L290.3 236.3L291.9 234.7L293.7 234.6L296.1 234.2L298.3 232.4L299.3 231.6L300.7 230L302.4 231.1L301.9 232.3L300.1 233.5L301.1 235.1L301 236.9L299.8 239L300.8 241.8L302 241.5L302.7 239L301.8 237.8L301.7 235.1L305.1 233.7L304.7 232L305.7 230.9L306.7 233.4L308.7 233.4L310.5 235.4L310.6 236.6L313.1 236.6L316 236.2L317.6 237.8L319.7 238.2L321.3 237.1L324.8 236L328.1 236L325.7 237L326.7 238.7L328.9 239L331 240.7L331.5 243.5L332.9 243.4L334 244.2L335.8 245.5L337.5 247.8L337.6 249.6L338.7 249.7L340.2 251.4L341.3 252.6L344.6 253.3L347.1 252.4L350.1 253.4L353.1 254.6L356 257.6L356.5 259L358.1 260.8L359.7 266.9L361.2 267.5L361.3 269.9L359.2 272.8L360 273.9L364.9 274.4L365 277.9L367.2 275.6L370.6 276.9L375.3 279L376.6 281.1L376.2 283L379.4 281.9L384.8 283.8L388.9 283.7L393.1 286.6L396.6 290.5L398.7 291.5L401.1 291.6L402.1 292.8L403.1 297.2L403.5 299.3L402.4 305.1L401 307.4L397.1 312.3L395.3 316.3L393.3 319.3L391.8 322L392 328.5L391.2 333.9L390.9 336.3L390 337.6L389.6 342.3L386.7 346.9L386.3 350.5L384 352L383.4 354.1L380.3 354.1L376 355.5L374 357L370.9 358.1L367.6 360.9L365.3 364.3L364.9 367L365.3 368.9L364.8 372.4L364.2 374.2L362.3 376.1L359.2 382.3L356.7 385L354.8 386.7L353.6 390L351.7 392L350.5 394.2L347.4 396.2L345.3 395.5L343.8 395.9L341.3 394.3L339.4 394.5L337.7 392.5L337.5 394.3L341 397.4L340.7 399.8L342.4 401.3L342.3 403L339.6 407.5L335.5 409.4L329.9 410.1L326.8 409.8L327.4 411.9L326.9 414.5L327.4 416.3L325.7 417.5L322.9 418L320.2 416.7L319.1 417.6L319.5 421.1L321.4 422.2L322.9 421L323.7 422.9L321.2 424L318.9 426.1L318.5 429.7L317.9 431.5L315.3 431.6L313.1 433.4L312.3 436L315 438.6L317.7 439.3L316.7 442.4L313.4 444.4L311.6 448.5L309.1 449.9L307.9 451.5L308.8 455.2L310.7 457.2L309.5 457L307.1 457L305.7 457.9L303.2 459.1L302.8 462.4L301.6 462.5L298.5 461.3L295.3 458.9L291.8 456.9L290.9 454.7L291.7 452.6L290.3 450.3L290 444.3L291.2 440.9L294.1 438.2L289.9 437.2L292.5 434.1L293.5 428.3L296.6 429.5L298 422.2L296.1 421.3L295.3 425.7L293.5 425.2L294.4 420.2L295.3 413.7L296.6 411.3L295.8 407.9L295.6 403.9L296.8 403.8L298.5 398.1L300.4 392.5L301.6 387.3L300.9 382L301.8 379.1L301.4 374.8L303 370.5L303.5 363.7L304.4 356.5L305.3 348.6L305.1 342.9L304.5 337.9L301.7 335.9L301.5 334.5L296 331L291 327.1L288.9 325L287.7 322.1L288.2 321.1L285.8 316.5L283.1 310L280.5 303L279.3 301.4L278.4 298.8L276.3 296.5L274.3 295.1L275.2 293.5L273.9 290.2L274.7 287.7L276.9 285.5L278.4 282.9L277.8 281.4L276.8 283L275.1 281.5L275.2 277.3L276.7 274.6L277.7 272.3L277.5 270.9L279 270.1L281 268.7L280.6 267.6L281.6 267.4L281.5 265.6L282.1 264.4L283.5 264.1L284.7 261.9L285.8 260.1L284.7 259.2L285.3 257.2L284.6 254L284.8 250.1L283.7 248.2L282.7 247.2L282.1 245.3L282.1 244.2L281.6 243L280.2 242L279 242.3L278.4 243.5L277.3 244.4L277.8 247.1L276.6 248.1L275.3 248.3L274.8 246.2L273.6 246.6L273 245.1L271.9 244.9L269.9 244.5L268 244L267.8 242.6L266.9 241L265.8 240.3L264.7 238.8L263.6 240.1L262.1 238.7L261.7 237L262.1 235.9L261.9 234.7L260.9 233.6L259.7 232.2L259 231L257.9 229.9L256.5 228.3L257 226.9L255.8 227.5L254.2 227.4L252.1 226.4L250.5 226.2L248.3 224.8L246.6 224.7L245.3 224L243.8 222.6L240.7 218.8L239.2 217.7L237 216.8L235.4 217L233.2 218.3L231.8 218.7L229.8 217.8L227.7 217.1L225.1 215.5L223.1 215L219.9 213.4L217.6 211.7L215.3 210.5L212.5 209.4L211.3 207.8L208.4 205.8L207 203.6L206.3 201.9L206.9 200.6L207.6 198.4L206.7 196.9L206.4 195.5L205.5 193.7L203 190.2L200.2 187.5L198.9 185.3L196.5 183.9L196.4 180.8L195 180L193.4 178.3L192.7 175.9L191.2 175.6L189.6 173.7L188.3 172L188.1 170.9L186.6 168.3L185.7 165.6L185.7 164.3L183.7 162.9L181.2 162L180.7 163.5L181.2 165.2L181.5 167.8L182.4 169.2L184.5 171.6L185.4 172.7L185.7 173.9L186.8 176.1L188.2 178.3L190 180.1L190.9 183.3L191.7 184.9L192.5 186.5L192.6 188.4L194 188.5L195.1 190.1L196.1 191.6L194.8 193.5L193.6 191.4L191.8 189.4L189.8 187.7L188.4 186.8L188.5 184.2L188.1 182.3L186.7 181.3L184.8 179.7L183.8 179.2L182 178.4L180.4 176.3L181.7 176.3L182.8 175L182.9 173.4L180.7 170.9L179.1 169.9L178.1 167.7L177.1 165.4L175.8 162.6L174.6 159.5L174.2 157.7L172.4 155.7L171.1 155.2L170.8 154.2L169.2 154.1L165.6 152.8L164.6 150.3L161.9 146.7L159.6 141.9L158.5 139.9L156.3 137L155.9 134.1L154.4 132.2L155.1 129.3L155 126.3L154.1 123.6L155.2 120.3L155.8 113.9L155.3 109.2L154.5 106.2L153.6 104.6L158 105.1L159.5 108.4L159.7 104.6L158.8 101.7L153 98.3L151 96.7L146 95.3L144.5 92.2L144.9 90L141.3 88.5L140.8 85.7L137.5 83.2L137.4 81.4L135.9 80L133.4 78.9L132.6 75.9L129.1 73L127.6 69.7L124.9 69.5L120.5 69.4L117.2 68.4L111.5 64.8L108.8 64.1L104 62.8L100.1 63.1L94.7 61.5L91.3 60L88.3 60.8L88.8 63.2L87.3 63.4L84.1 64.2L81.6 65.4L78.6 66.1L78.2 64L79.4 60.6L82.4 59.5L78.1 60.6L76.2 62.9L72.2 65.4L74.2 67.1L71.6 69.6L68.6 71.1L65.8 72.2L65.1 73.7L60.8 75.5L59.9 77.2L56.7 78.7L54.8 78.4L52.2 79.4L49.3 80.6L47 81.8L42.3 82.8L44.9 80.5L47.6 79.5L50.5 77.5L54 77.1L55.4 75.7L59.2 73.6L61.9 71.7L62.4 69L63.8 66.9L60.6 68L58.2 68.7L56.4 66.9L55.6 68.1L54.6 66.4L51.8 67.8L50.1 67.8L49.8 65.7L50.3 64.4L48.6 63.2L44.9 63.8L42.6 62.2L40.7 61.4L40.7 59.4L38.6 57.9L39.6 55.9L41.9 53.9L42.9 52.1L45.1 51.8L47 52.4L49.3 50.7L51.3 51L53.4 49.9L52.9 48.3L51.3 47.7L53.4 46.3L51.7 46.4L48.7 47.1L45.7 47.1L41.8 47.5L37.7 46.7L36.5 45.3L33 43.2L36.9 41.8L43.1 40.1L45.4 40.1L45 41.8L50.9 41.7L48.6 39.5L45.2 38.2L43.2 36.4L40.6 34.9L36.8 33.8L38.3 32L43.2 31.9L46.8 30.3L47.4 28.6L50.3 26.9L53 26.5L58.2 24.9L60.8 25.2L65.1 23.3L69.3 24L71.3 25.6L72.5 24.9L77.2 25.1L81.3 26.6L84.1 26.2L90 27.3L95.3 27.6L97.4 28.1L101.1 27.5L105.4 28.6L108.4 29.1L113.6 29.9L117.9 31.6L120.8 31.9L123.3 30.5L126.6 29.4L130.8 29.8L134.9 28.3L139.5 27.4L141.4 28.8L143.4 28L144.1 26.4L146 26.7L150.7 29.9L154.4 27.5L154.8 30.2L158.2 29.6L159.2 28.6L162.6 28.8L166.8 30.2L173.3 31.5L177.1 32.1L179.9 31.9L183.6 33.7L179.7 35.4L184.7 36.2L192.2 35.8L194.6 35.1L197.6 37.2L200.6 35.5L197.7 34L199.5 32.8L202.9 32.6L205.1 32.3L207.4 33.1L210.2 35L213.3 34.7L218.2 36.3L222.5 35.8L226.5 35.8L226.2 33.7L228.7 33L233 34.2L233 37.6L234.8 34.8L237 34.9L238.2 31.3L235.3 29.2L232 27.7L232.2 23.9L235.5 21.3L239.2 21.9L242 23.4L245.8 27.4L243.3 29.1L248.5 29.8ZM182.9 17.1L181.5 18.8L187.7 17.7L191.5 19.5L194.7 17.7L197.2 18.8L199.5 22.3L200.9 20.8L198.9 17.2L201.3 16.7L204.1 17.3L207.2 18.7L209 22.1L209.8 24.6L214.5 26.3L219.5 28L219.2 29.5L214.6 29.8L216.4 31.1L215.5 32.4L210.4 31.9L205.7 30.9L202.4 31.1L197.2 32.3L189 33L185.2 33.2L183.7 31.5L179.9 30.6L177.5 31L174.1 28.2L175.9 27.8L180.2 27.2L184.1 27.4L187.7 26.8L182.4 26L176.4 26.2L172.5 26.2L171 24.9L177.5 23.5L173.2 23.5L168.3 22.6L170.7 20L172.6 18.6L180 16.4L182.9 17.1ZM209.7 16.1L207.3 18.4L202.9 15.9L207.6 15.3L209.7 16.1ZM287.9 17.2L285.2 18L282.2 18L279.2 18.4L275.3 16.4L275.5 15.1L276.8 14.9L283.2 15.3L287.9 17.2ZM259.5 17L261.7 19.2L264.3 16.3L271.3 14.9L276.1 18.5L275.7 20.8L281.2 19.8L283.8 18.4L290 20.2L293.8 21.9L294.2 23.4L299.3 22.6L302.2 24.8L308.9 26.2L311.3 27.6L314 30.9L308.9 32.5L315.4 34.8L319.8 35.6L323.8 38.8L328.2 39.1L327.3 41.5L322.4 45.6L319 44.1L314.7 40.7L311.1 41.2L310.7 43.2L313.6 45.2L317.4 46.8L318.6 47.8L320.4 51.2L319.4 53.8L315.9 52.8L308.9 50L312.9 53L315.8 55.1L316.2 56.4L308.7 55L302.7 52.9L299.3 51.2L296.2 48.4L292.1 46.7L292.2 47.7L284.1 48.3L281.8 47.1L283.6 44.5L288.8 44.5L294.6 44L293.6 42.7L294.6 41L298.2 37.6L297.4 36L296.4 34.8L292.1 33.1L286.5 31.9L288.3 31L285.3 28.9L282.9 28.7L280.7 27.5L279.2 28.5L274.2 29L264 28.2L258.2 27.1L253.7 26.6L251.4 25.4L254.3 23.8L250.3 23.8L249.4 20.2L251.6 17.1L254.4 15.7L261.6 14.7L259.5 17ZM221.2 14.6L224.5 15.3L229.5 14.9L230.2 15.9L227.6 17.6L231.8 19.1L231.3 22.2L226.8 23.6L224.1 23.3L222.2 22L215.3 19.3L215.3 18.1L221 18.6L217.9 16.3L221.2 14.6ZM898.9 16.8L894.7 16.8L889 16.4L891.1 14.9L894.6 14.5L898.6 15.9ZM241.1 18.3L238.1 21L235 20.8L233.2 17.7L233.3 16L234.7 14.5L237.5 13.6L243.3 13.7L248.6 14.5L244.4 17.7L241.1 18.3ZM165.4 23.1L158.1 24.9L156.6 23.4L150.2 21.5L151.1 20.4L153.3 17.5L155.7 15.2L153 13L162.4 12.5L166.4 13.2L173.5 13.4L176.2 14.4L179.1 15.9L175.6 16.8L168.8 19.2L165.4 21.7L165.4 23.1ZM918.7 10.2L915.5 11.6L911 11.3L905.9 9.9L906.6 8.8L911.7 9.3L918.7 10.2ZM240 10.6L238.5 12L234.4 11.7L231.1 10.8L232.5 9.2L236.5 8.3L239 9.5L240 10.6ZM903 8.5L900.8 11.2L890.6 11.1L886 11.9L880.5 9.6L882 7.2L885.6 6.5L893 6.7L903 8.5ZM226.4 4.5L228.5 6.1L228.6 7.9L227.3 10.5L222.8 10.9L219.8 10.3L219.8 8.3L215.3 8.5L215.1 5.8L218.1 5.9L222.3 4.7L226.2 5ZM199.4 6.3L200.5 7.6L203 7L205.9 7.1L206.4 8.8L204.7 10.5L195.3 11L188.3 12.6L184 12.6L183.7 11.5L189.5 10L176.9 10.4L173 9.7L176.8 6.3L179.4 5.3L187.2 6.5L192.2 8.6L197 8.9L193.1 5.5L195.6 4.2L198.5 4.6L199.4 6.3ZM659.8 25.5L658.2 25.8L649.1 25.4L648.4 23.8L643.3 22.9L642.9 21L645.8 20.2L645.7 18.3L651.2 15.3L648.6 14.9L655.3 11.8L654.5 10.2L660.7 8.4L669.9 6.1L679.2 5.5L683.9 4.2L689.3 3.7L691.3 5.1L689.4 6.2L679.5 7.9L671.1 9.6L662.4 12.9L658.3 16.4L653.9 19.7L654.5 22.7L659.8 25.5ZM237 3.2L240.1 4.3L245.5 4.3L247.9 5.4L247.3 6.8L250.5 7.5L252.3 8.4L256 8.5L260.1 8.8L264.5 8.1L270.1 7.8L274.6 8L277.6 9.3L278.2 10.8L276.5 11.7L272.4 12.5L268.8 12.1L260.8 12.6L255.1 12.7L250.7 12.2L243.3 11.1L242.3 9.2L242 7.4L239.2 5.9L233.4 5.5L230.2 4.4L231.3 2.9L237 3.2ZM177.2 1.2L176.8 3.9L174.7 5.2L172.1 5.3L166.9 6.8L162.5 7.4L158.7 6.6L163.5 4L169.2 1.7L173.4 1.8L177.2 1.2ZM797.1 3.6L797.9 5.3L800.4 4.5L808.5 4.5L814.8 6.2L817 7.5L816.3 9.4L813.3 10.4L806 12.4L803.9 13.4L807.3 13.9L811.4 14.8L813.9 14.1L815.4 16.4L816.6 15.5L821 14.9L829.9 15.5L830.6 17.1L842.2 17.6L842.4 15L848.3 15.6L852.7 15.6L857.2 17.4L858.5 19.6L856.8 21.1L860.3 23.9L864.7 25.3L867.4 21.6L871.8 23.2L876.6 22.3L881.9 23.3L884 22.3L888.5 22.8L886.5 19.6L890.2 18.1L915.3 20.3L917.6 22.4L924.9 25.1L936.1 24.4L941.7 25L944 26.5L943.6 29L947.1 30L950.8 29.3L955.7 29.2L960.9 29.9L966.2 29.5L971 32.6L974.5 31.5L972.2 29.3L973.5 27.7L982.3 28.7L988.1 28.5L996.1 30.2L1000 31.7L1000 45.7L996.4 47.2L992.8 47L995.3 48.8L997 51.7L998.3 52.7L998.6 54.1L992.7 54.3L984.9 56.9L982.4 57.3L978.2 59.8L974.2 62L973.1 63.5L969.2 61.1L961.9 63.9L960.7 62.6L958 64.1L954.3 63.6L953.4 65.9L950 69.3L950.1 70.7L953.3 71.5L952.9 76.6L950.4 76.7L949.2 79.7L950.3 81.2L945.5 83L944.5 87L940.4 87.8L939.5 91.4L935.5 94.7L934.5 92.2L933.3 87.1L931.8 79.3L933.1 74.5L935.4 72.4L935.6 70.7L939.9 70L944.9 65.5L949.6 61.9L954.6 59.1L956.9 54.2L953.5 54.5L951.8 57.4L944.8 61.2L942.5 56.9L935.3 58.1L928.4 64L930.7 66.1L924.5 67L920.2 67.4L920.4 64.9L916.1 64.3L912.6 66.1L904.1 65.5L895 66.5L886 73.3L875.4 81.6L879.7 82.1L881.1 84.3L883.8 85L885.6 83.3L888.6 83.5L892.6 87.4L892.7 90.4L890.5 93.9L890.3 98L889.1 103.7L884.9 108.7L883.9 111.2L880.2 115.2L876.4 119.3L874.6 121.4L870.9 123.4L869.2 123.5L867.4 121.8L863.7 124.3L863.3 125.5L862.2 125.3L861 126.5L860.2 127.7L860.3 130.2L858.9 131L857.3 132.6L855.5 133.2L854.3 134.1L854.2 135.7L856.5 138.2L858.9 142.3L859.6 144.6L859.6 148.6L858.6 150.5L856.1 151.2L853.9 152.7L851.3 153L851 151L851.6 148.4L850.3 144.8L852.4 144.2L850.5 141.2L849.1 140.5L848 141.5L846.4 139.9L847.2 138.4L847.6 137.3L848.3 135.4L846.5 134.5L845.2 133.5L841.3 134.6L839.3 136.2L836.3 137.2L837.7 135.5L837.2 134.2L839.4 131.8L837.9 130L835.5 131.2L832.3 133.6L830.6 135.9L827.9 136.1L826.5 137.7L827.9 140.1L830.2 140.7L830.3 142.2L832.5 143.3L835.6 140.8L838.1 142.1L839.9 142.2L840.3 144L836.4 145L835.1 146.9L832.4 148.7L831 151.1L834 153.1L835.1 156.5L836.7 159.7L838.6 162.4L838.6 165L836.8 166L837.5 167.9L839.1 168.9L838.7 171.8L838 174.6L836.5 174.9L834.4 178.7L832.2 183.3L829.6 187.5L825.8 190.7L821.9 193.7L818.8 194.1L817.1 195.6L816.1 194.5L814.6 196.2L810.7 198L807.7 198.5L806.8 202.2L805.2 202.4L804.5 199.9L805.2 198.5L801.5 197.4L800.1 198L796.4 201L794.1 204.3L793.5 206.7L795.6 210.4L798.2 215L800.7 217.2L802.4 220L803.7 226.5L803.3 232.7L801 235L797.8 237.2L795.6 240.2L792.1 243.4L791.1 241.2L791.9 238.8L789.8 236.8L787.5 236.3L786.4 234.5L785 230.8L782.5 229.2L780.1 229.3L780.5 226.5L778 226.6L777.8 230.4L776.3 235.5L775.4 238.6L775.6 241.2L777.4 241.3L778.6 244.5L779.1 247.5L780.6 249.5L782.3 249.9L783.7 251.8L786 254.2L787.2 256.6L787.3 258.9L787 260.5L787.3 261.7L787.5 263.8L789.6 267.9L789.5 269L787.6 269.3L784.9 266.7L781.6 263.9L781.3 262.1L779.7 259.8L779.3 256.9L778.3 254.9L778.6 252.4L778 250.9L776.9 249.6L776.4 247.8L775 245.8L773.6 244.2L773.2 246.2L772.6 244.3L772.9 242.1L773.8 238.7L773.5 236.1L774.3 233.5L773.4 231.4L773.6 227.6L772.5 225.7L771.6 221.5L771.1 217.1L769.9 214.2L768.1 216L764.9 218.5L763.4 218.2L761.6 217.3L762.6 213L762 209.7L759.8 205.7L760.2 204.4L758.6 203.9L756.6 201.1L755.8 199.3L755.6 197.5L755.1 195.8L753.9 193.7L751.4 193.6L751.6 195L750.8 197L749.6 196.3L748.4 196.5L747.3 196.2L746.9 197.5L745 197.5L741.6 198.2L741.8 200.8L740.3 202.9L736.3 205.3L733.2 209.4L731.1 211.6L728.3 213.9L728.3 215.5L726.9 216.4L724.4 217.6L723.1 217.8L722.3 220.5L722.9 225.1L723 228L721.8 231.3L721.8 237.3L720.4 237.4L719.1 240.1L720 241.3L717.4 242.2L716.5 244.6L715.4 245.6L712.8 242.4L711.5 237.5L710.4 233.9L709.4 232.3L708 228.9L707.3 224.5L706.8 222.3L704.3 217.5L703.1 210.7L702.3 206.2L702.3 202L701.8 198.7L697.7 200.8L695.8 200.4L692.1 196.1L693.5 194.8L692.6 193.5L689.4 190.5L687.3 189.6L686.5 187.1L684.4 184.4L679.3 185.1L674.7 185.1L670.8 185.6L665.6 184.6L662.6 183.8L659.4 183.3L658.3 179L656.9 178.4L654.8 179L652 180.7L648.6 179.5L645.8 176.8L643.1 175.8L641.3 172.5L639.2 167.8L637.7 168.4L635.9 167.2L634.9 168.6L633.3 168.4L633.8 170L634.5 173.4L635.6 176.5L636.9 177.3L637.4 178.5L639.3 180L639.5 181.4L639.2 182.6L639.6 183.8L640.7 185.9L641 184.2L641.7 182.4L643.3 183.1L643.4 185.1L642.7 187.2L643.3 188.5L646 188.8L648.3 188.9L650 189L651.9 186.6L654 184.4L655.8 182.2L656.6 181L656.6 182.8L656.7 186.2L657.9 188.6L659.5 189.8L661.5 190.3L663.1 190.9L664.4 192.9L665.1 194.1L666.1 195.3L665.1 197.4L663.5 199.5L662.5 201.9L661.2 201.7L660.2 204.4L660.5 206.7L659 207.1L657.2 208.4L657 210.1L654.6 210.9L653.5 211.7L653.5 213.2L652.2 214.1L650.7 213.8L648.8 215L647.5 215.2L645.5 216.1L645 217.7L644.9 218.9L642.1 220.4L637.7 222L635.2 224.5L634 224.7L631.5 225.9L629.8 226.6L627.4 226.8L626.1 227.9L625 229L623.6 229L620.8 229.3L620.1 227.2L620.1 225.3L619.7 224.3L619.1 221.7L618.3 220.2L618.6 218.4L618.8 216.2L618.5 214.7L617.6 213.7L617.4 212.3L616 211L614.5 208.1L613.7 205.2L611.8 202.8L610.6 202.2L608.7 198.9L608.4 196.5L608.5 194.4L606.9 190.5L605.6 189.1L604.1 188.4L603.2 186.4L602.6 183.8L600.7 180.4L599 177.6L597.6 175.2L596.2 175.2L596.6 173.2L596.8 172L597.1 170.6L595.6 174.2L594.9 176L593.3 175.5L592 173.9L590.1 168.9L590.9 172.9L592.6 176.4L594.7 181.9L595.8 183.8L596.7 185.8L599.1 189.7L598.7 192.6L601.9 195.7L603.3 199.9L603.1 204.1L604.1 208.3L605.2 209.2L606.7 210.5L608.3 214.5L609.1 217.7L610.6 219.4L614.4 222.8L615.9 224.8L617.4 226.8L618.3 228L619.7 229L620.3 230.1L620.2 231.6L618.7 232.4L619.8 233.4L621.3 235.5L622.5 236.9L623.9 237L626.5 236.1L629.6 235.6L632 234.6L633.4 234.3L636 233.6L638.1 233L639.6 232.6L640.9 231.4L642 231.4L641.8 234.4L641.8 236.3L641.2 237.5L640.4 241.3L639.1 245.2L637.4 249.7L635 254.9L632.6 258.8L629.3 263.6L626.6 266.4L622.4 269.9L619.8 272.6L616.8 276.8L616.1 278.7L613.6 280.9L612.9 282.4L611.8 282.6L611.4 285.1L610.6 286.5L610 288.8L608.9 290L607.6 294.3L607.8 296.3L609.6 297.6L608.9 300.6L609 301.7L608.9 303.3L609.8 305.5L611 309L612 309.8L612.4 311.3L612.3 314.8L612.7 317.9L612.8 323.4L613.3 325.1L612.4 327.6L611.4 330.1L609.6 332.2L607.1 333.6L603.9 335.3L600.8 339L599.7 339.7L597.8 342.2L596.6 343L596.4 345.5L597.7 348.1L598.3 350.2L598.3 351.2L598.7 354.5L598.3 356.1L598.5 358.2L597.3 359.4L595 360.6L591.7 362.5L590.5 363.8L590.7 365.3L591.2 367.4L590.5 369.9L590.2 372.8L589.5 374.4L587.6 376.2L585.8 378.5L585.1 380.3L583.5 382.8L580.3 386.4L578.4 388.5L576.3 390.1L573.4 391.5L572 391.7L569.9 392.1L568.5 392.8L565.5 392.1L563.9 392.5L562.7 392.4L559.8 393.7L557.5 394.3L555.8 395.6L554.5 395.7L553.3 394.5L551.2 392.8L550.7 390.3L549.8 388L550.6 384.6L548.8 381.4L547.4 378.4L545.4 373.8L543.3 371.2L542.3 368.6L541.6 365.2L541 362.6L540 357.2L540 353L539.6 351.1L538.5 349.7L537.1 346.8L535.6 342.6L535 340.4L532.8 337L532.6 334.3L532.3 332.1L532.7 329L533.7 325.8L533.8 324.3L534.7 321.1L535.4 319.7L537 317.4L537.9 315.8L538.2 313.2L538 311.2L537.2 310L536.4 307.8L535.8 305.7L536.8 303.6L535.9 300.2L535.4 297.9L534 295.7L533.8 293.9L533.1 291.3L530.8 287.5L528 284L526.1 281.1L524.4 277.5L524.5 276.3L525.1 275.2L525.8 272.6L526.4 270L526.8 265.6L527.2 262.8L526.1 260.5L524.9 259.9L524.3 258.3L523.6 256.8L520.7 258.1L519.7 257.9L518.6 258.7L516.4 258.6L514.9 256.4L514 253.9L512 251.6L509.9 251.6L507.5 251.6L505.2 252L502.9 252.8L498.6 254.8L497 256L494.5 257.1L492.1 256.1L490.8 256.1L488.9 255.4L487.1 255.5L483.8 256.1L481.9 257.1L479.1 258.4L477.8 258.3L475 256.6L472.5 254L470.1 252L468.2 249.8L465.5 248.1L464 246.2L463.5 244.9L463.2 242.4L462 240.3L460.9 238.9L459.5 237.8L459.2 236.2L458 234.9L456.5 233.4L455.3 233.2L454.7 231.6L453.7 230.1L453.2 227.5L453.6 225.9L452.4 223.2L451 221.9L452.3 221.3L453.6 218.8L454.3 217L454 215.1L454.8 213.4L455.1 210.1L454.8 206.6L454.5 204.9L454.8 203.1L454.1 201.4L452.6 199.9L452.7 198.4L452.9 196.8L453.9 195.9L454.8 194L454.6 192.8L455.6 190.4L457.1 188.1L458.8 185.5L458.9 183.7L459.9 181.5L461.7 180.2L463.5 176.6L464.9 175.2L467.5 174.9L469.7 172.5L471.1 171.5L473.4 168.6L472.7 164.2L473.8 161.2L474.2 159.4L476 157L478.7 155.4L480.8 153.9L482.7 150.3L483.5 148.2L485.6 148.2L487.2 149.7L489.9 149.4L492.8 150.2L494 150.2L496.6 148.3L499.6 147.7L501.4 146.3L504.1 145.2L508.8 144.6L513.4 144.3L514.8 144.8L517.4 143.4L520.4 143.4L521.5 144.2L523.4 144L526.4 142.6L528.4 143L528.3 144.8L530.6 143.5L529.4 145.9L529.4 147.5L530 151.4L528.2 153.2L528.7 155.1L530.2 155.1L530.9 156.8L531.9 157.4L535.2 158.6L536.3 158.3L538.7 158.8L542.3 160.4L543.6 163.5L546.1 164.2L550.1 165.7L553 167.4L554.4 166.5L555.7 164.9L555.1 162.2L555.9 160.5L557.9 158.9L559.8 158.4L563.6 159.1L564.5 160.7L565.6 160.7L569.2 161.7L569.9 162.9L573.6 162.8L576.3 163.7L579 164.8L580.3 165.3L582.5 164.2L583.6 163.2L586 162.9L588 163.3L588.8 165.1L589.4 163.9L591.6 164.8L593.8 165L595.2 164.1L596 162.9L596.5 161.1L597.1 158.4L598.6 154.7L599.9 152.2L599.7 149.4L600.4 147.9L599.4 146.3L600.4 145L598.8 145.3L596.4 144.5L594.5 146.5L590.3 146.9L588.1 145.1L585.1 144.9L584.4 146.4L582.5 146.8L579.8 144.9L576.8 145L575.1 141.5L573.1 139.6L574.5 136.8L572.7 135.2L575.8 131.8L580.1 131.7L581.2 129L586.5 129.5L589.9 127.2L593.1 126.2L597.7 126.1L602.5 128.6L606.5 130L609.8 129.4L612.1 129.7L615.4 127.9L615.8 126.4L615.1 124L613.5 122.7L612 122.3L611 121.2L607.4 118.3L604.3 116.9L601.9 114.9L603.9 114.3L606.2 111.4L604.6 110L608.7 108.6L606.2 108.4L604 108.7L602.1 109.8L599.5 110L597.1 111.3L597.3 113.5L598.6 114.3L601.5 114.1L600.9 115.3L597.9 116L594.1 118L592.6 117.3L593.2 115.6L590.2 114.6L593.3 112.8L588.2 111.1L588 109.8L585.4 110.2L584.4 112.1L582.2 114.7L580.9 116.4L579.3 120.3L577.9 121.7L576.9 124.2L577.8 126.2L578.1 127.6L580.5 128.7L576.7 129.8L575.5 130.9L573.2 132.8L572.3 131.1L570.7 130.3L569.2 130L565.9 130.9L567.8 132.8L566.4 133.4L564.8 133.4L563.4 131.6L563.5 134.5L564.9 136.1L563.8 136.9L565.4 138.5L566.7 139.5L566.8 141.5L564.2 140.6L565 142.4L563.3 142.7L564.3 145.8L562.5 145.9L560.2 144.3L559.2 141.5L558.7 139.2L557.6 137.6L556.2 135.6L555.5 134.4L553.9 132.4L553.7 130.7L553.9 128.3L554.3 127.3L553.2 126.4L552.5 125.3L551.3 124.6L548.6 123.3L547 122L544.5 121L542.2 118.4L541.4 116.7L541.4 115.5L539.6 114.9L538.8 116.4L537.9 115.3L538 114L536.5 113.2L534.2 114.4L534.4 116.1L535 118.9L537.6 120.7L539 123.6L542.1 126.4L544.2 126.4L544.1 127.9L546.6 129.1L548.7 130.2L551 132L550.8 133.9L549.3 132.3L546.9 131.7L545.7 134L547.7 135.3L547.4 137.1L546.2 137.3L544.7 140.3L543.6 140.6L543.6 139.5L544.1 137.7L543.7 134.9L542.8 133.1L541.7 132.7L540.8 131.2L539.1 130.5L537.9 129.1L535.8 128.9L533.6 127.3L531.1 125L529.2 123L528.3 119.5L527 119.1L524.7 118L523.4 118.4L521.8 120.1L520.7 120.3L518.1 122.3L512.7 121.4L508.6 122.5L508.3 124.6L508.4 126.6L505.8 129L502.3 129.7L502 130.9L500.3 132.8L499.2 135.7L500.3 137.7L498.7 139.3L498.1 141.6L496 142.3L494 144.9L490.5 145L487.9 144.9L486.1 146.2L485.1 147.5L483.7 147.2L482.7 146L481.9 144L479.3 143.5L478.2 144.4L476.7 143.9L475.3 144.3L475.7 141.5L475.4 139.4L474.2 139L473.5 137.7L473.8 135.4L474.9 134.1L475.1 132.7L475.6 130.6L475.6 129.1L475 127.9L474.9 126.7L475 124.2L473.9 122.7L477.8 120.1L481.2 120.8L485 120.7L487.9 121.3L490.2 121.2L494.7 121.3L496.2 119.2L496.7 112.2L493.8 108.5L491.8 106.7L487.5 105.4L487.2 102.8L490.8 102.1L495.5 103L494.6 99L497.3 100.5L503.7 97.8L504.6 94.9L507 94.2L509.2 93.5L510.6 92.5L513.1 87.4L516.9 85.9L519.2 86L522 85.1L524.4 84.1L523.8 82.8L523.7 80.8L522.6 78.9L522.5 75.3L523.7 73.3L526.2 73.1L529.4 71.1L529.3 72.9L528.5 74L530.3 75.6L529.6 76.9L526.8 79L527.6 80.7L527.6 82.1L530.4 82.9L530.4 84.1L533.2 83.5L534.8 82.5L537.9 83.9L539.2 85L541.1 84L545.5 82.4L549 81.2L551.7 81.8L554.6 82.7L555.2 81.1L559.1 80L558.5 77.1L558.6 74.4L559.9 72.2L562.6 71L564.8 73.6L567 73.6L567.5 70.9L567.9 68.8L566.8 69.2L565.1 68L564.8 66L568.3 65L571.8 64.5L574.9 65.1L577.7 65L580.9 63L578 61.4L572.9 61.6L568 62.9L563.5 63.7L561.9 61.8L559.2 60.6L559.8 57.2L558.5 54L559.8 51.9L562.3 49.7L568.7 45.9L570.6 45.2L570.3 43.7L566.4 42.1L561.6 43.1L558.9 45.5L559.4 47.7L554.9 50.5L549.6 53.5L547.6 58.4L549.5 60.9L552.2 62.8L549.6 66.8L546.7 67.6L545.7 73.5L544.1 76.8L540.7 76.5L539.2 79.2L536 79.4L535.1 76.1L532.7 72.1L530.6 67.1L528.8 65L523.3 69.1L519.6 69.9L515.7 68.1L514.7 64.3L513.9 56.2L516.4 54L523.8 51L529.2 47.4L534.3 42.5L541 35.7L545.7 33.1L553.3 28.7L559.4 27.2L564 27.4L568.2 24.4L573.3 24.6L578.2 23.9L586.9 26.5L583.3 27.4L586.4 29.6L589.3 28.4L593.8 30.5L601.4 31.3L611.9 35.3L614.1 37L614.2 39.3L611.2 41.2L606.6 42.1L594.2 39.4L592.2 39.9L596.7 42.4L597.1 47.7L600.6 48.7L602.8 49.6L603.2 47.9L601.4 46.4L603.3 45.1L610 47.3L612.3 46.4L610.5 43.9L616.9 40.4L619.5 40.6L622.1 41.8L623.7 39.4L621.4 37.3L622.7 35.2L620.7 33.1L628.5 34.2L630.1 36.2L626.5 36.6L626.6 38.5L628.7 39.7L633 39L633.7 36.7L639.5 35.1L649.2 32.1L651.3 32.2L648.6 34.4L652 34.7L654 33.5L659.2 33.4L663.3 32L666.5 34.1L669.7 31.8L666.8 29.7L668.2 28.6L676.4 29.6L680.2 30.7L690.3 34.8L692.2 32.9L689.3 31.1L685.9 30L686.8 28.3L685.3 25.6L685.3 24.5L690.4 21.3L692.2 18.1L694.3 17.4L701.6 18.3L702.2 20.3L699.6 23.1L701.3 24.2L702.2 26.7L701.6 31.5L704.6 33.6L703.4 36L698 41L701.2 41.5L702.3 40.2L705.3 39.3L706.1 37.6L708.5 35.9L706.9 33.9L708.2 31.6L705.1 31.3L704.4 29.4L706.7 25.8L703.1 23L708 20.6L707.4 18.1L708.8 18L710.2 20L709.1 23.4L712.1 24L710.8 21.5L715.5 20.1L721.3 19.9L726.4 21.9L723.9 19L723.6 15.3L728.5 14.6L735.2 14.7L741.2 14.3L738.9 12.4L742.1 10.1L745.3 10L750.7 8.3L758.1 7.8L766.3 6.5L768.6 7.3L774.8 5.4L779.9 5.5L780.7 4L783.3 2.5L789.9 1.1L794.6 2.2L790.8 3.1L797.1 3.6ZM636.4 128.8L637.8 131.3L639.1 131.4L637.7 132.7L637.2 135.4L636.7 136.6L635.7 137.4L635.8 139.2L636.7 141.8L639.3 142.5L641.2 144.3L645.2 144.9L649.5 143.9L649.3 140.6L649.7 137L647.5 135.8L648.2 133.4L646.4 133.2L647 130.2L649.6 131.1L652 129.9L650 127.8L649.2 125.8L647 126.7L646.7 129.3L645.8 127L646.4 124.7L645.8 123.5L642.6 122.3L641.4 119.1L639.8 118.3L639.7 117.1L642.4 117.4L642.5 114.9L644.9 114.3L647.3 114.8L647.8 111.4L647.3 109.2L644.6 109.4L642.2 108.6L639 110.1L636.4 110.8L635.1 112.9L632.4 113.5L629.7 117.1L632.2 120.4L631.9 122.8L635 126.9L636.4 128.8ZM239.3 1.7L238.1 1.8L232.9 1.6L237.7 0.6L239.7 1.3ZM193.9 1.1L188.7 2.1L184.6 0.9L186.9 0L190.9 0L194.8 0L193.9 1.1ZM568.7 0.5L562.5 1.9L557.6 1.1L559.5 0.2L557.8 0L563.6 0L564.7 0L568.7 0.5ZM195.4 0L192 0L187.4 0L190.3 0L191.8 0L195.4 0ZM233.8 0L229.7 0.5L227.4 0L226.2 0L229.6 0L231.2 0L234.6 0ZM222.1 0L223.1 0.3L218.6 0L214 0L207.8 0L210.5 0L207.2 0L212.4 0L219.9 0L222.1 0ZM791.9 0L776.2 0.3L781.3 0L783.6 0L785.7 0L792.7 0ZM550.7 0L559.8 0L552.9 0L551.3 0.6L548.9 1.3L547.6 4.2L544.2 4.3L538.2 2.2L540.7 0.9L536.6 0L531.2 0L529 0L536.6 0L538.1 0L542.1 0L543.1 0L547.2 0L550.7 0ZM570.7 0L576.1 0L572 0L564 0L555.8 0L551.3 0L548.2 0L556.8 0L560.9 0L563.7 0L570.7 0ZM642 0L638.3 0L635.8 0L632.2 0L629.2 0L630.8 0L624.6 0L630 0L634.2 0L636.4 0L639 0L643.1 0L642 0ZM777.6 0L771.5 0L763.8 0L759.2 0L757.1 0L753.3 0L760.5 0L766.5 0L771.9 0L778.3 0ZM258.3 0L261.6 0L257.8 0L252.7 0L247.8 0L242 0L239 0L241.3 0L236.2 0L233.1 0L231.4 0L233.3 0L235.2 0L238.1 0L236.8 0L243.3 0L246.9 0L251.5 0L256.1 0L258.3 0ZM309.7 0L317.1 0L323.1 0L328.2 0L321.3 0L314.6 0L312.1 0L318.1 0L311.6 0L307 0L302.3 0L296.5 0L294.8 0L286.4 0L290.2 0L288.3 0L290.6 0L287.9 0L283.6 0.4L282.3 1.7L278.4 2.8L283.6 3.4L276.2 6.4L269 5.4L260.8 6L256.7 5.5L251.4 5.4L251.1 3.7L256.2 2.9L254.8 0.4L256.5 0.1L264 1.6L260.2 0L255.7 0L257.9 0L262.8 0L259.7 0L258.5 0L266.1 0L268.3 0L272.6 0L266.4 0L256.7 0L251.8 0L249.4 0L246.2 0L249.7 0L253 0L258.4 0L262.5 0L265.9 0L268.9 0L271.1 0L274.7 0L279.7 0L288.2 0L289.7 0L297.7 0L303.7 0L309.7 0ZM424.7 0L442.1 0L437 0L426.3 0L411.4 0L412.8 0L422.6 0L431 0L436.4 0L438.7 0L435.6 0L442.7 0L456.2 0L464.5 0L466.1 0L454.8 0L453.2 0L444.3 0L450.7 0L447.5 0L445.3 0L445.4 1.3L448.7 3.6L444.3 3.7L439.8 4.8L444.9 6.7L445.6 9.7L442.6 10L446.2 13L440 13.2L443.2 14.7L442.3 15.9L438.4 16.5L434.5 16.5L438 18.8L438.1 20.4L432.6 18.9L431.1 19.9L434.9 20.8L438.5 22.9L439.6 25.7L434.6 26.4L432.5 25.1L429 23L430 25.4L426.8 27.3L434.1 27.4L437.9 27.6L430.5 30.7L422.9 33.4L414.8 34.6L411.7 34.7L408.9 36L405 39.7L399 42.2L397.1 42.3L393.4 43.2L389.4 44L387 46.2L387 48.6L385.6 50.9L381.1 53.7L382.2 56.5L380.9 59.4L379.5 62.8L375.6 63L371.5 60.1L365.9 60.1L363.2 58.2L361.4 54.8L356.6 50.4L355.2 48.1L354.8 45L350.9 41.7L351.9 39.2L350.1 37.9L352.8 33.8L357 32.5L358.1 31L358.7 28.3L355.5 29.6L354 30.1L351.5 30.6L348.1 29.4L347.9 27L349 25.2L351.6 25.1L357.2 26.1L352.5 23.8L350 22.6L347.2 23.1L344.9 22.3L348 19L346.3 17.7L344.1 15.3L340.8 11.5L337.2 10.2L337.3 8.7L329.8 6.7L323.9 6.4L316.5 6.5L309.7 6.8L306.5 5.7L301.7 3.5L309 2.4L314.5 2.2L302.7 1.3L296.4 0L307.3 0L317.5 0L318.5 0L311 0L313.5 0L323.1 0L327.1 0L326 0L332.5 0L341.1 0L349.6 0L352.7 0L360 0L366.7 0L370.6 0L376.3 0L369.7 0L379.4 0L389.2 0L392.7 0L402.5 0L424.7 0Z"/>
+          <g id="cityLights" aria-hidden="true"></g>
+          <g id="siteLayer"></g>
+        </svg>
+      </div>
+      <div id="siteListMobile" class="site-list" aria-label="各據點學習進度"></div>
+      <div class="map-foot">
+        <span class="hint"><span class="spark" aria-hidden="true"></span><span data-i18n="mapHint">地圖上的亮點，是我們遍布全球的據點！</span></span>
+        <span data-i18n="demoNote">Demo 測試資料 · 正式數據由 IT 介接</span>
+      </div>
+    </div>
+
+    <aside class="feed" aria-label="Top 10 Learner 全球學習時數排行">
+      <h2>
+        <svg class="flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        Top 10 Learner <span class="live" data-i18n="topHours">累計時數</span>
+      </h2>
+      <ol id="learnerList" class="lb"></ol>
+    </aside>
+  </section>
+
+  <footer class="pagefoot" data-i18n="footer">LinkedIn Learning 全球 Launch · 學習發展團隊 · 本頁為 Demo，數值為測試資料</footer>
+</div>
+
+<!-- 據點活動花絮彈窗(內容由 openEvent() 依 DASHBOARD_DATA 填入) -->
+<div class="modal-backdrop" id="eventModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="evSite evTitle">
+    <div class="modal-head">
+      <div>
+        <div class="ev-site" id="evSite"></div>
+        <h3 id="evTitle"></h3>
+      </div>
+      <button class="modal-close" id="evClose" data-i18n-aria="closeModal" aria-label="關閉視窗">✕</button>
+    </div>
+    <div class="carousel" id="evCarousel">
+      <div class="slides" id="evSlides"></div>
+      <button class="car-btn car-prev" id="evPrev" data-i18n-aria="prevAct" aria-label="上一個活動">‹</button>
+      <button class="car-btn car-next" id="evNext" data-i18n-aria="nextAct" aria-label="下一個活動">›</button>
+      <div class="car-dots" id="evDots"></div>
+      <span id="evLive" class="sr-only" aria-live="polite"></span>
+    </div>
+    <div class="ev-meta" id="evMeta"></div>
+    <div class="ev-quotes" id="evQuotes"></div>
+    <div class="ev-actions">
+      <a class="btn-primary" id="evTeams" href="#" target="_blank" rel="noopener"></a>
+      <button class="btn-board" id="evBoardBtn" type="button" aria-expanded="false" data-i18n="boardBtn"></button>
+      <button class="btn-like" id="evLike"></button>
+    </div>
+    <div class="ev-board" id="evBoard" hidden>
+      <input type="text" id="evBoardName" maxlength="24" data-i18n-ph="boardNamePh">
+      <textarea id="evBoardText" maxlength="200" rows="2" data-i18n-ph="boardTextPh"></textarea>
+      <div class="ev-board-row">
+        <span class="ev-board-hint" data-i18n="boardHint"></span>
+        <button class="btn-primary" id="evBoardSend" type="button" data-i18n="boardSend"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   測試資料(IT 接正式 API 時:renderDashboard(apiData) 一次重繪全頁;
+   或覆寫 DASHBOARD_DATA 後呼叫 renderDashboard()。故意用 var 宣告,
+   讓外部腳本可直接重新賦值)
+   ════════════════════════════════════════════════════════════════ */
+var DASHBOARD_DATA = {
+  updatedAt: null, // e.g. "2026-07-11T09:00:00+08:00";null = 頁面載入時間
+  learningUrl: "https://www.linkedin.com/learning/", // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
+  kpis: [
+    { key: "activation", tone: "green", status: "good", tag: "Global Success Metric #1",
+      label: "帳號啟動率", labelEn: "Account Activation Rate", labelEs: "Tasa de Activación de Cuentas",
+      sub: "已啟用帳號 / License數", subEn: "Activated accounts / Licenses", subEs: "Cuentas activadas / Licencias",
+      value: 78, target: 90, unit: "%",
+      note: "🎯 目標達成率 86.7%", noteEn: "🎯 86.7% of target", noteEs: "🎯 86.7% del objetivo",
+      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
+    { key: "mau", tone: "amber", status: "good", tag: "Global Success Metric #2",
+      label: "每月活躍使用率", labelEn: "Monthly Active Rate", labelEs: "Tasa de Uso Activo Mensual",
+      sub: "當月登入人數 / 已啟用帳號", subEn: "Monthly logins / Activated accounts", subEs: "Inicios de sesión del mes / Cuentas activadas",
+      value: 62, target: 50, unit: "%",
+      note: "🚀 超標 12%", noteEn: "🚀 +12% over target", noteEs: "🚀 +12% sobre el objetivo",
+      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
+    { key: "avghours", tone: "blue", status: "good", tag: "Global Success Metric #3",
+      label: "平均學習時數", labelEn: "Avg. Learning Time", labelEs: "Tiempo Medio de Aprendizaje",
+      sub: "總學習時數 / 已啟用帳號", subEn: "Total hours / Activated accounts", subEs: "Horas totales / Cuentas activadas",
+      value: 31.4, target: 30, unit: " min",
+      note: "⏱️ 達標 +1.4 分鐘", noteEn: "⏱️ +1.4 min over target", noteEs: "⏱️ +1.4 min sobre el objetivo",
+      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
+  ],
+  compliance: {
+    tag: "Global Success Metric #4",
+    label: "AI 必修完訓率", labelEn: "AI Mandatory Training Completion", labelEs: "Finalización de Formación Obligatoria de IA",
+    value: 91, target: 100, unit: "%",
+    note: "剩餘 287 人未完成", noteEn: "287 people still to complete", noteEs: "287 personas por completar",
+    gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo",
+    sites: [
+      { id: "WYHQ", rate: 95, status: "good" },
+      { id: "WYTN", rate: 93, status: "good" },
+      { id: "WYMY", rate: 88, status: "warn" },
+      { id: "WYUS", rate: 92, status: "good" },
+      { id: "WYMX", rate: 84, status: "bad" }
+    ]
+  },
+  sites: [
+    {
+      id: "WYHQ", name: "WYHQ", city: "台灣 · 新北汐止", cityEn: "Taiwan · New Taipei", cityEs: "Taiwán · Nuevo Taipéi",
+      address: "新北市汐止區新台五路一段110號23樓", tel: "+886-2-6615-8888",
+      lon: 121.663, lat: 25.065,
+      participants: 872, activationRate: 78, courses: 1842,
+      card: { x: 846, y: 52 }, anchor: "bl",
+      event: {
+        // activities:一張輪播 = 一個活動;第一個固定放 AI Literacy Journey。
+        // src 填照片網址(16:9,建議 1280x720)後自動顯示;留空 = 佔位圖卡。
+        // quotes 是「該活動」的同仁留言,會跟著輪播切換。
+        activities: [
+          {
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "Learn、Practice、Grow 三步驟很清楚，跟著做就完成了！", who: "人資夥伴" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "photos/wyhq-ai-selfie.jpg", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [
+              { text: "五大關卡一次闖完，超有成就感！", who: "研發同仁" },
+              { text: "AI 助手推薦的課程太實用了！", who: "人資夥伴" }
+            ]
+          },
+          {
+            name: "學習時數衝刺賽", nameEn: "Learning Hours Sprint", nameEs: "Sprint de Horas de Aprendizaje", src: "photos/learning-hours-sprint.jpg", emoji: "🏆", caption: "學習時數衝刺賽",
+            quotes: [
+              { text: "每天多學 10 分鐘，這週衝進排行榜前十！", who: "新進同仁" },
+              { text: "跟團隊一起衝時數，超有動力！", who: "研發同仁" }
+            ]
+          }
+        ],
+        likes: 18,
+        teamsUrl: "#" // 換成該據點 Teams 頻道網址;留空字串會隱藏按鈕
+      }
+    },
+    {
+      id: "WYTN", name: "WYTN", city: "台灣 · 台南安定", cityEn: "Taiwan · Tainan", cityEs: "Taiwán · Tainan",
+      address: "台南市安定區北園三路8號4樓", tel: "+886-6-6013588",
+      lon: 120.237, lat: 23.121,
+      participants: 422, activationRate: 74, courses: 861,
+      card: { x: 846, y: 258 }, anchor: "tl",
+      event: {
+        activities: [
+          {
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "AI 基礎課很好懂，馬上就用在日常報表上！", who: "製造部同仁" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "線上一起闖關，氣氛超熱！", who: "廠務同仁" }]
+          },
+          {
+            name: "午後點心學習會", nameEn: "Afternoon Snack & Learn", nameEs: "Merienda y Aprendizaje", src: "", emoji: "🧋",
+            quotes: [{ text: "打卡送點心，學習更有動力！", who: "製造部同仁" }]
+          },
+          {
+            name: "學習打卡挑戰", nameEn: "Learning Check-in Challenge", nameEs: "Reto de Registro de Aprendizaje", src: "", emoji: "📸",
+            quotes: [{ text: "連續打卡七天達成！", who: "品保同仁" }]
+          }
+        ],
+        likes: 11,
+        teamsUrl: "#"
+      }
+    },
+    {
+      id: "WYMY", name: "WYMY", city: "馬來西亞 · 柔佛", cityEn: "Malaysia · Johor", cityEs: "Malasia · Johor",
+      address: "No. 5, Jalan Kargo 1, Senai Airport City, 81400 Senai, Johor, Malaysia", tel: "+607-5528188",
+      lon: 103.663, lat: 1.641,
+      participants: 431, activationRate: 80, courses: 903,
+      card: { x: 598, y: 312 }, anchor: "tr",
+      event: {
+        activities: [
+          {
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "拿到限定成就徽章，成就感滿滿！", who: "WYMY Learning Champion" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "線上闖關超好玩，下週還要！", who: "WYMY Learning Champion" }]
+          },
+          {
+            name: "AI 學習任務挑戰", nameEn: "AI Learning Quest", nameEs: "Misión de Aprendizaje de IA", src: "", emoji: "🎯",
+            quotes: [{ text: "AI 助手每天派任務，超有挑戰！", who: "倉儲部同仁" }]
+          },
+          {
+            name: "跨部門共學時間", nameEn: "Cross-team Study Session", nameEs: "Sesión de Estudio entre Equipos", src: "", emoji: "🤝",
+            quotes: [{ text: "跟不同部門一起學，收穫加倍！", who: "工程部同仁" }]
+          }
+        ],
+        likes: 15,
+        teamsUrl: "#"
+      }
+    },
+    {
+      id: "WYUS", name: "WYUS", city: "美國 · 華盛頓州", cityEn: "USA · Washington", cityEs: "EE. UU. · Washington",
+      address: "2018 156th Ave NE, Suite V, Bellevue, WA 98007, United States", tel: "",
+      lon: -122.137, lat: 47.627,
+      participants: 356, activationRate: 66, courses: 715,
+      card: { x: 10, y: 10 }, anchor: "br",
+      event: {
+        activities: [
+          {
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "The Learn-Practice-Grow path made it easy to start.", who: "Engineering Team" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "Great kickoff — the AI learning path is spot on.", who: "Engineering Team" }]
+          },
+          {
+            name: "Coffee & Learn", src: "", emoji: "☕",
+            quotes: [{ text: "Best coffee chat we've had — with certificates!", who: "PM Team" }]
+          },
+          {
+            name: "AI Use-Case Showcase", src: "", emoji: "💡",
+            quotes: [{ text: "So many ideas to bring back to my team.", who: "Support Team" }]
+          }
+        ],
+        likes: 9,
+        teamsUrl: "#"
+      }
+    },
+    {
+      id: "WYMX", name: "WYMX", city: "墨西哥 · 華雷斯", cityEn: "Mexico · Ciudad Juárez", cityEs: "México · Ciudad Juárez",
+      address: "Calle Baudelio Pérez M. 420-A Ote., Col. Paseos de Zaragoza, Cd. Juárez Chih. C.P. 32550", tel: "+52-6562574545",
+      lon: -106.424, lat: 31.652,
+      participants: 287, activationRate: 59, courses: 571,
+      card: { x: 88, y: 228 }, anchor: "tr",
+      event: {
+        activities: [
+          {
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "¡La ruta de alfabetización en IA fue muy práctica!", who: "Calidad" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "¡Los cursos de IA están increíbles!", who: "Producción" }]
+          },
+          {
+            name: "AI 素養工作坊", nameEn: "AI Literacy Workshop", nameEs: "Taller de Alfabetización en IA", src: "", emoji: "🎓",
+            quotes: [{ text: "Taller muy práctico, ¡gracias!", who: "Calidad" }]
+          },
+          {
+            name: "AI Selfie 挑戰", nameEn: "AI Selfie Challenge", nameEs: "Reto AI Selfie", src: "", emoji: "🤳",
+            quotes: [{ text: "¡El AI Selfie fue lo mejor del día!", who: "Ingeniería" }]
+          }
+        ],
+        likes: 13,
+        teamsUrl: "#"
+      }
+    }
+  ],
+  /* Top 10 Learner:全球累計訓練時數排行(渲染時會依 hours 由高到低排序,最多取 10 名) */
+  topLearners: [
+    { name: "陳雅婷", site: "WYHQ", hours: 42.5 },
+    { name: "Nurul Aisyah", site: "WYMY", hours: 39 },
+    { name: "Emily Chen", site: "WYUS", hours: 37.5 },
+    { name: "林建宏", site: "WYTN", hours: 35 },
+    { name: "María González", site: "WYMX", hours: 33.5 },
+    { name: "王志明", site: "WYHQ", hours: 31 },
+    { name: "Ahmad Faizal", site: "WYMY", hours: 29.5 },
+    { name: "黃淑芬", site: "WYTN", hours: 27 },
+    { name: "David Park", site: "WYUS", hours: 26.5 },
+    { name: "Carlos Ramírez", site: "WYMX", hours: 25 }
+  ],
+  /* 活動推播牆:一張 = 一個活動 EDM;可放多筆。tone: party/challenge/leader */
+  broadcasts: [
+    { tone: "challenge", image: "photos/ai-literacy-journey-full.jpg", tag: "全球 · 學習旅程",
+      title: "AI Literacy Journey", titleEn: "AI Literacy Journey", titleEs: "AI Literacy Journey",
+      sub: "🎯 完成 3 門 AI 課程，挑戰 AI 新技能！", subEn: "🎯 Complete 3 AI courses and take on new AI skills!", subEs: "🎯 ¡Completa 3 cursos de IA y domina nuevas habilidades de IA!",
+      cta: "開始旅程", ctaEn: "Start the journey", ctaEs: "Comenzar el viaje",
+      bullets: ["掌握 AI 基礎知識", "提升工作效率", "培養 AI 時代必備能力", "完成旅程即可獲得限定成就徽章"], bulletsEn: ["Master AI fundamentals", "Work more efficiently", "Build must-have AI-era skills", "Finish the journey to earn a limited badge"], bulletsEs: ["Domina los fundamentos de IA", "Trabaja con más eficiencia", "Desarrolla habilidades clave de la era IA", "Termina el viaje y gana una insignia"] },
+    { tone: "party", image: "photos/wyhq-ai-selfie.jpg", tag: "全球 · 線上活動",
+      title: "線上闖關挑戰", titleEn: "Online Learning Quest", titleEs: "Reto de Aprendizaje en Línea",
+      sub: "🎯 全程線上參與，完成 5 大關卡，解鎖挑戰獎勵！完成所有關卡，即有機會抽 LinkedIn 精美好禮 🎁", subEn: "🎯 Join online anywhere — clear all 5 levels to unlock the challenge reward! Finish them all for a chance to win LinkedIn goodies 🎁", subEs: "🎯 Participa en línea — ¡supera los 5 niveles y desbloquea la recompensa! Complétalos todos y participa por regalos de LinkedIn 🎁",
+      steps: ["下載 App", "探索興趣", "AI 教練", "設定時數目標", "開始 AI 課程"],
+      stepsEn: ["Download app", "Discover interests", "AI coaching", "Set hour goal", "Start AI course"],
+      stepsEs: ["Descarga la app", "Descubre intereses", "Coach de IA", "Fija tu meta", "Empieza un curso"],
+      cta: "立即線上闖關", ctaEn: "Start the quest online", ctaEs: "Empieza el reto en línea" },
+    { tone: "leader", image: "photos/learning-hours-sprint-full.jpg", tag: "全球 · 排行榜",
+      title: "學習時數衝刺賽", titleEn: "Learning Hours Sprint", titleEs: "Sprint de Horas de Aprendizaje",
+      sub: "衝進全球 Top 10,登上學習排行榜!", subEn: "Reach the global Top 10 learning leaderboard!", subEs: "¡Llega al Top 10 mundial de aprendizaje!",
+      cta: "查看排行榜", ctaEn: "View leaderboard", ctaEs: "Ver ranking",
+      bullets: ["每日累積學習時數", "與各據點同仁 PK", "為你的據點爭光"], bulletsEn: ["Log hours every day", "Compete across all sites", "Bring glory to your site"], bulletsEs: ["Acumula horas cada día", "Compite entre sedes", "Da gloria a tu sede"] }
+  ]
+};
+
+/* ══ 多語言(繁中 / English)═══════════════════════════════
+   UI 文案集中在 I18N;內容型欄位(city、活動 name)用平行的 *En 欄位,
+   缺 *En 時自動回退中文。IT 之後接 API 沿用同鍵即可。 */
+var I18N = {
+  zh: {
+    overline: "LinkedIn Learning 全球 Launch",
+    h1: "LinkedIn Learning Journey Map",
+    sub: "一起學習、一起點亮世界 — Your Growth Journey Starts Here.",
+    cta: "前往 LinkedIn Learning",
+    updatedEvery: "數據每 1 小時更新",
+    updatedPrefix: "最後更新 ",
+    tileParticipants: "全球參與人數",
+    tileCourses: "已完成課程數",
+    tileTasks: "任務完成數",
+    vsLastWeek: "較上週",
+    mapHead: "全球據點即時進度",
+    mapTag: "全球據點同步啟動 · 亮起你的學習足跡",
+    mapHint: "✨ 地圖上的亮點，是我們遍布全球的據點！",
+    demoNote: "Demo 測試資料 · 正式數據由 IT 介接",
+    topHours: "累計時數",
+    hoursUnit: "小時",
+    detailHead: "據點明細",
+    detailNote: "地圖資料的完整表格檢視（含各據點聯絡資訊）",
+    thSite: "據點", thLocation: "地點", thAddress: "地址", thPhone: "電話",
+    thParticipants: "參與人數", thActivation: "啟動率", thCourses: "完成課程",
+    footer: "LinkedIn Learning 全球 Launch · 學習發展團隊 · 本頁為 Demo，數值為測試資料",
+    cardParticipants: "人參與",
+    cardActivation: "啟動率",
+    cardHint: "👆 點擊查看活動花絮 →",
+    themeToLight: "切換至淺色模式", themeToDark: "切換至深色模式",
+    langLabel: "語言 / Language",
+    closeModal: "關閉視窗", prevAct: "上一個活動", nextAct: "下一個活動",
+    modalTitleFallback: "活動花絮", actFallback: "活動",
+    metaNow: "目前", metaPeople: " 人參與", metaActivation: "啟動率",
+    teamsCta: "前往 Teams 頻道看更多 →",
+    liked: "❤️ 已打氣", likePrefix: "🤍 給 ", likeSuffix: " 打氣",
+    photoPending: "活動照片籌備中", photoAlt: "活動照片",
+    seeHighlights: "查看 ", highlightsOf: " 的活動花絮",
+    slidePos1: "第 ", slidePos2: " 個活動 / 共 ", slidePos3: " 個 ",
+    dotAct: "第 ", dotActSuffix: " 個活動",
+    mapAriaPre: "世界地圖，顯示 ", mapAriaMid: " 共 ", mapAriaSuf: " 個據點的學習參與人數與啟動率",
+    nameJoin: "、",
+    statsAria: "全球達標指標", complianceAria: "AI 必修合規",
+    sitesToggle: "各據點明細",
+    boardBtn: "💬 留言板", boardSend: "送出留言", boardWho: "訪客", boardNamePh: "你的暱稱(選填)", boardTextPh: "寫下你對這個活動的留言…", boardHint: "留言僅存在你的瀏覽器(demo);跨使用者公開留言需後端",
+    bcastAria: "活動推播",
+    locale: "zh-Hant"
+  },
+  en: {
+    overline: "LinkedIn Learning Global Launch",
+    h1: "LinkedIn Learning Journey Map",
+    sub: "Learn together, light up the world — Your Growth Journey Starts Here.",
+    cta: "Go to LinkedIn Learning",
+    updatedEvery: "Updated hourly",
+    updatedPrefix: "Updated ",
+    tileParticipants: "Total Participants",
+    tileCourses: "Courses Completed",
+    tileTasks: "Tasks Completed",
+    vsLastWeek: "vs. last week",
+    mapHead: "Live Progress by Site",
+    mapTag: "All sites launched together · light up your learning journey",
+    mapHint: "✨ Each glowing point is one of our sites around the world!",
+    demoNote: "Demo data · live figures via IT integration",
+    topHours: "Total hours",
+    hoursUnit: "hrs",
+    detailHead: "Site Details",
+    detailNote: "Full table view of the map data (incl. contact info)",
+    thSite: "Site", thLocation: "Location", thAddress: "Address", thPhone: "Phone",
+    thParticipants: "Participants", thActivation: "Activation", thCourses: "Courses",
+    footer: "LinkedIn Learning Global Launch · Learning & Development · Demo page, sample data",
+    cardParticipants: "learners",
+    cardActivation: "Activation",
+    cardHint: "👆 Tap for activity highlights →",
+    themeToLight: "Switch to light mode", themeToDark: "Switch to dark mode",
+    langLabel: "語言 / Language",
+    closeModal: "Close", prevAct: "Previous activity", nextAct: "Next activity",
+    modalTitleFallback: "Activity Highlights", actFallback: "Activity",
+    metaNow: "Now", metaPeople: " learners", metaActivation: "activation",
+    teamsCta: "See more in the Teams channel →",
+    liked: "❤️ Cheered", likePrefix: "🤍 Cheer for ", likeSuffix: "",
+    photoPending: "Photos coming soon", photoAlt: "Activity photo",
+    seeHighlights: "View activity highlights for ", highlightsOf: "",
+    slidePos1: "Activity ", slidePos2: " of ", slidePos3: ": ",
+    dotAct: "Activity ", dotActSuffix: "",
+    mapAriaPre: "World map showing ", mapAriaMid: " — ", mapAriaSuf: " sites with learner counts and activation rates",
+    nameJoin: ", ",
+    statsAria: "Global success metrics", complianceAria: "AI mandatory compliance",
+    sitesToggle: "By site",
+    boardBtn: "💬 Message board", boardSend: "Post", boardWho: "Guest", boardNamePh: "Your name (optional)", boardTextPh: "Write a comment about this activity…", boardHint: "Comments are saved in your browser only (demo); a shared board needs a backend",
+    bcastAria: "Campaign announcements",
+    locale: "en-US"
+  },
+  es: {
+    overline: "Lanzamiento Global de LinkedIn Learning",
+    h1: "LinkedIn Learning Journey Map",
+    sub: "Aprendamos juntos, iluminemos el mundo — Your Growth Journey Starts Here.",
+    cta: "Ir a LinkedIn Learning",
+    updatedEvery: "Actualizado cada hora",
+    updatedPrefix: "Actualizado ",
+    tileParticipants: "Participantes totales",
+    tileCourses: "Cursos completados",
+    tileTasks: "Tareas completadas",
+    vsLastWeek: "vs. semana pasada",
+    mapHead: "Progreso en vivo por sede",
+    mapTag: "Todas las sedes en marcha · ilumina tu camino de aprendizaje",
+    mapHint: "✨ ¡Cada punto brillante es una de nuestras sedes en el mundo!",
+    demoNote: "Datos de demostración · cifras reales vía integración de TI",
+    topHours: "Horas totales",
+    hoursUnit: "h",
+    detailHead: "Detalles por sede",
+    detailNote: "Vista de tabla completa de los datos del mapa (incl. datos de contacto)",
+    thSite: "Sede", thLocation: "Ubicación", thAddress: "Dirección", thPhone: "Teléfono",
+    thParticipants: "Participantes", thActivation: "Activación", thCourses: "Cursos",
+    footer: "Lanzamiento Global de LinkedIn Learning · Formación y Desarrollo · Página de demostración, datos de muestra",
+    cardParticipants: "participantes",
+    cardActivation: "Activación",
+    cardHint: "👆 Toca para ver los momentos destacados →",
+    themeToLight: "Cambiar a modo claro", themeToDark: "Cambiar a modo oscuro",
+    langLabel: "Idioma / Language",
+    closeModal: "Cerrar", prevAct: "Actividad anterior", nextAct: "Actividad siguiente",
+    modalTitleFallback: "Momentos destacados", actFallback: "Actividad",
+    metaNow: "Ahora", metaPeople: " participantes", metaActivation: "activación",
+    teamsCta: "Ver más en el canal de Teams →",
+    liked: "❤️ Apoyado", likePrefix: "🤍 Apoyar a ", likeSuffix: "",
+    photoPending: "Fotos próximamente", photoAlt: "Foto de la actividad",
+    seeHighlights: "Ver momentos destacados de ", highlightsOf: "",
+    slidePos1: "Actividad ", slidePos2: " de ", slidePos3: ": ",
+    dotAct: "Actividad ", dotActSuffix: "",
+    mapAriaPre: "Mapa mundial que muestra ", mapAriaMid: " — ", mapAriaSuf: " sedes con número de participantes y tasa de activación",
+    nameJoin: ", ",
+    statsAria: "Métricas globales de éxito", complianceAria: "Cumplimiento obligatorio de IA",
+    sitesToggle: "Por sede",
+    boardBtn: "💬 Tablón de mensajes", boardSend: "Publicar", boardWho: "Invitado", boardNamePh: "Tu nombre (opcional)", boardTextPh: "Escribe un comentario sobre esta actividad…", boardHint: "Los comentarios se guardan solo en tu navegador (demo); un tablón compartido requiere backend",
+    bcastAria: "Anuncios de campañas",
+    locale: "es-MX"
+  }
+};
+
+var currentLang = "zh";
+try {
+  var _svLang = localStorage.getItem("llmap-lang");
+  if (_svLang && I18N[_svLang]) currentLang = _svLang;
+  else {
+    var _nav = (navigator.language || "").toLowerCase();
+    if (_nav.indexOf("es") === 0) currentLang = "es";
+    else if (_nav.indexOf("zh") !== 0) currentLang = "en";
+  }
+} catch (err) { currentLang = "zh"; }
+
+/* UI 字串 */
+function T(key) {
+  var d = I18N[currentLang] || I18N.zh;
+  return d[key] != null ? d[key] : (I18N.zh[key] != null ? I18N.zh[key] : key);
+}
+/* 內容型欄位:英文模式優先取 <key>En,缺則回退原欄位 */
+function L(obj, key) {
+  if (!obj) return "";
+  if (currentLang !== "zh") { var alt = obj[key + currentLang.charAt(0).toUpperCase() + currentLang.slice(1)]; if (alt) return alt; }
+  return obj[key];
+}
+
+/* ── 地圖投影(與點陣預計算使用相同參數,勿改) ── */
+const MAP = { w: 1000, h: 470, lonMin: -180, lonMax: 180, latMin: -56, latMax: 78 };
+function project(lon, lat) {
+  return {
+    x: (lon - MAP.lonMin) / (MAP.lonMax - MAP.lonMin) * MAP.w,
+    y: (MAP.latMax - lat) / (MAP.latMax - MAP.latMin) * MAP.h
+  };
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const CARD_W = 152, CARD_H = 100;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function el(ns, tag, attrs) {
+  const node = document.createElementNS(ns, tag);
+  for (const k in attrs) node.setAttribute(k, attrs[k]);
+  return node;
+}
+
+/* HTML 跳脫:之後 IT 接 API 資料時,避免站名/地址等欄位注入標籤 */
+function esc(v) {
+  return String(v).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+/* 屬性選擇器跳脫(site id 含引號等特殊字元時仍可查詢) */
+function cssEsc(v) {
+  return window.CSS && CSS.escape ? CSS.escape(v) : String(v).replace(/["\\]/g, "\\$&");
+}
+
+function clampRate(v) {
+  return Math.max(0, Math.min(100, Number(v) || 0));
+}
+
+/* 數字一律先轉型再格式化:API 若回傳字串,不會流進 innerHTML */
+function fmtNum(v) {
+  return (Number(v) || 0).toLocaleString("zh-Hant");
+}
+
+/* 據點資訊卡內容(SVG foreignObject 與窄螢幕列表共用) */
+function buildCardHTML(s) {
+  const rate = clampRate(s.activationRate);
+  return (
+    '<div class="s-name">' + esc(s.name) + "</div>" +
+    '<div class="s-city">' + esc(L(s, "city")) + "</div>" +
+    '<div class="s-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
+    '<b data-site-count="' + esc(s.id) + '">0</b><span>' + T("cardParticipants") + '</span></div>' +
+    '<div class="meter"><i data-site-meter="' + esc(s.id) + '"></i></div>' +
+    '<div class="s-rate">' + T("cardActivation") + " " + rate + "%</div>" +
+    '<div class="s-hint" aria-hidden="true">' + T("cardHint") + '</div>'
+  );
+}
+
+/* 讓卡片可點擊/可鍵盤操作(SVG 卡與窄螢幕列表卡共用) */
+function decorateCard(div, s) {
+  div.className = "scard";
+  div.setAttribute("role", "button");
+  div.setAttribute("tabindex", "0");
+  div.setAttribute("aria-label", T("seeHighlights") + s.name + T("highlightsOf"));
+  div.setAttribute("data-site-id", s.id);
+}
+
+/* 資訊卡邊緣的引導線起點(依 anchor:tl/tr/bl/br) */
+function cardAnchor(card, anchor) {
+  const pad = 10;
+  switch (anchor) {
+    case "tl": return { x: card.x + pad,          y: card.y };
+    case "tr": return { x: card.x + CARD_W - pad, y: card.y };
+    case "bl": return { x: card.x + pad,          y: card.y + CARD_H };
+    default:   return { x: card.x + CARD_W - pad, y: card.y + CARD_H };
+  }
+}
+
+function renderSites() {
+  const layer = document.getElementById("siteLayer");
+  layer.textContent = "";
+  for (const s of DASHBOARD_DATA.sites) {
+    const p = project(s.lon, s.lat);
+    const g = el(SVG_NS, "g", { class: "site", "data-site-id": s.id });
+
+    const a = cardAnchor(s.card, s.anchor);
+    g.appendChild(el(SVG_NS, "line", { class: "leader", x1: a.x, y1: a.y, x2: p.x, y2: p.y }));
+    g.appendChild(el(SVG_NS, "circle", { class: "beam", cx: p.x, cy: p.y, r: 26, fill: "url(#lightGrad)" }));
+    g.appendChild(el(SVG_NS, "circle", { class: "halo", cx: p.x, cy: p.y, r: 15 }));
+    g.appendChild(el(SVG_NS, "circle", { class: "core", cx: p.x, cy: p.y, r: 5 }));
+
+    const fo = el(SVG_NS, "foreignObject", { x: s.card.x, y: s.card.y, width: CARD_W, height: CARD_H });
+    const card = document.createElementNS(XHTML_NS, "div");
+    decorateCard(card, s);
+    card.innerHTML = buildCardHTML(s);
+    fo.appendChild(card);
+    g.appendChild(fo);
+    layer.appendChild(g);
+  }
+
+  /* 窄螢幕改用的原尺寸卡片列表(與 SVG 卡片同內容) */
+  const list = document.getElementById("siteListMobile");
+  if (list) {
+    list.textContent = "";
+    for (const s of DASHBOARD_DATA.sites) {
+      const card = document.createElement("div");
+      decorateCard(card, s);
+      card.innerHTML = buildCardHTML(s);
+      list.appendChild(card);
+    }
+  }
+
+  /* 無障礙名稱跟著資料走,新增據點時不會過期 */
+  const names = DASHBOARD_DATA.sites.map(function (s) { return s.name; }).join(T("nameJoin"));
+  document.getElementById("worldmap").setAttribute(
+    "aria-label",
+    T("mapAriaPre") + names + T("mapAriaMid") + DASHBOARD_DATA.sites.length + T("mapAriaSuf")
+  );
+}
+
+function renderTopLearners() {
+  const ol = document.getElementById("learnerList");
+  ol.textContent = "";
+  const list = (DASHBOARD_DATA.topLearners || [])
+    .slice()
+    .sort(function (a, b) { return (Number(b.hours) || 0) - (Number(a.hours) || 0); })
+    .slice(0, 10);
+  for (const p of list) {
+    const li = document.createElement("li");
+    const rank = document.createElement("span");
+    rank.className = "rank";
+    const rk = ol.children.length + 1;
+    if (rk <= 3) { rank.classList.add("medal"); rank.textContent = ["🥇", "🥈", "🥉"][rk - 1]; }
+    else rank.textContent = rk;
+    const who = document.createElement("div");
+    who.className = "who";
+    const nm = document.createElement("div");
+    nm.className = "nm";
+    nm.textContent = p.name;
+    const st = document.createElement("div");
+    st.className = "st";
+    st.textContent = p.site;
+    who.appendChild(nm);
+    who.appendChild(st);
+    const hrs = document.createElement("div");
+    hrs.className = "hrs";
+    hrs.textContent = (Number(p.hours) || 0).toLocaleString(T("locale"));
+    const unit = document.createElement("span");
+    unit.textContent = T("hoursUnit");
+    hrs.appendChild(unit);
+    li.appendChild(rank);
+    li.appendChild(who);
+    li.appendChild(hrs);
+    ol.appendChild(li);
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById("detailBody");
+  tbody.textContent = "";
+  for (const s of DASHBOARD_DATA.sites) {
+    const tr = document.createElement("tr");
+    const rate = Math.max(0, Math.min(100, Number(s.activationRate) || 0));
+    tr.innerHTML =
+      '<td><span class="site-code">' + esc(s.name) + "</span></td>" +
+      "<td>" + esc(L(s, "city")) + "</td>" +
+      '<td><span class="addr">' + esc(s.address) + "</span></td>" +
+      '<td><span class="tel">' + esc(s.tel || "—") + "</span></td>" +
+      '<td class="num">' + fmtNum(s.participants) + "</td>" +
+      '<td class="num"><span class="rate-cell"><span class="rate-bar"><i style="width:' + rate + '%"></i></span>' + rate + "%</span></td>" +
+      '<td class="num">' + fmtNum(s.courses) + "</td>";
+    tbody.appendChild(tr);
+  }
+}
+
+/* 數字滾動動畫。背景分頁不會觸發 rAF,故以計時器保底寫入最終值;
+   節點上的世代序號讓重複呼叫 renderDashboard() 時舊動畫立即失效,
+   不會有舊計時器把新數字蓋回去的競態 */
+function countUp(node, target, duration) {
+  target = Number(target) || 0;
+  const finalText = target.toLocaleString("zh-Hant");
+  const gen = (node._countGen = (node._countGen || 0) + 1);
+  if (reducedMotion || duration <= 0 || document.hidden) {
+    node.textContent = finalText;
+    return;
+  }
+  const t0 = performance.now();
+  function tick(t) {
+    if (node._countGen !== gen) return;
+    const k = Math.min(1, (t - t0) / duration);
+    const eased = 1 - Math.pow(1 - k, 3);
+    node.textContent = Math.round(target * eased).toLocaleString("zh-Hant");
+    if (k < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  setTimeout(function () {
+    if (node._countGen === gen) node.textContent = finalText;
+  }, duration + 120);
+}
+
+/* 「較上週」增量列;deltas 缺漏或為 null 時整列隱藏 */
+function renderDeltas() {
+  const deltas = DASHBOARD_DATA.deltas || {};
+  for (const node of document.querySelectorAll("[data-delta]")) {
+    const v = deltas[node.dataset.delta];
+    if (v == null || v === "") {
+      node.hidden = true;
+      node.textContent = "";
+    } else {
+      node.hidden = false;
+      node.innerHTML = "▲ " + esc(v) + ' <span class="vs">' + T("vsLastWeek") + '</span>';
+    }
+  }
+}
+
+/* 整頁重繪。IT 接 API:renderDashboard(apiData) 即可 */
+/* ── 達標型 KPI + 合規卡渲染(取代原三個統計磁貼)────────────── */
+var kpiSitesOpen = false;
+try { kpiSitesOpen = localStorage.getItem("llmap-kpisites") === "1"; } catch (err) { kpiSitesOpen = false; }
+var KPI_ICONS = {
+  activation: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  mau: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  avghours: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+};
+function renderKpis() {
+  const wrap = document.getElementById("kpiSection");
+  if (!wrap) return;
+  wrap.textContent = "";
+  for (const k of (DASHBOARD_DATA.kpis || [])) {
+    const tone = k.tone || "green";
+    const card = document.createElement("div");
+    card.className = "kpi tone-" + tone;
+    const sub = L(k, "sub");
+    const bigTxt = k.unit === "%" ? (k.value + "%") : String(k.value);
+    const tgtTxt = String(k.target) + (k.unit || "");
+    card.innerHTML =
+      '<div class="kpi-head">' +
+        '<div class="kpi-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (KPI_ICONS[k.key] || "") + '</svg></div>' +
+        '<div class="kpi-tt"><div class="kpi-label">' + esc(L(k, "label")) + '</div>' +
+          (sub ? '<div class="kpi-sub">' + esc(sub) + '</div>' : '') +
+        '</div>' +
+        (k.tag ? '<span class="kpi-tag">' + esc(k.tag) + '</span>' : '') +
+      '</div>' +
+      '<div class="kpi-body"><span class="kpi-val">' + esc(bigTxt) + '</span><span class="kpi-target">/ ' + esc(tgtTxt) + '</span></div>' +
+      (L(k, "note") ? '<div class="kpi-note note-' + (k.status || "good") + '">' + esc(L(k, "note")) + '</div>' : '') +
+      (k.sites && k.sites.length ? '<div class="kpi-sites"><button class="kpi-sites-toggle" type="button" aria-expanded="' + (kpiSitesOpen ? "true" : "false") + '"><span>' + esc(T("sitesToggle")) + '</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button><div class="kpi-sites-list"' + (kpiSitesOpen ? "" : " hidden") + '>' + k.sites.map(function (s) { var st = s.status || "good"; var mk = st === "good" ? "✓" : (st === "warn" ? "!" : "✕"); var sv = k.unit === "%" ? (s.val + "%") : (s.val + (k.unit || "")); return '<div class="kpi-site"><span class="cmark st-' + st + '" aria-hidden="true">' + mk + '</span><span class="code">' + esc(s.id) + '</span><span class="r st-' + st + '">' + esc(sv) + '</span></div>'; }).join("") + '</div></div>' : '');
+    wrap.appendChild(card);
+  }
+}
+function renderCompliance() {
+  const box = document.getElementById("complianceCard");
+  if (!box) return;
+  const c = DASHBOARD_DATA.compliance;
+  if (!c) { box.style.display = "none"; return; }
+  box.style.display = "";
+  const bigTxt = c.value + (c.unit || "");
+  const tgtTxt = String(c.target) + (c.unit || "");
+  let sitesHtml = "";
+  for (const s of (c.sites || [])) {
+    const st = s.status || "good";
+    const mark = st === "good" ? "✓" : (st === "warn" ? "!" : "✕");
+    sitesHtml +=
+      '<div class="comp-site">' +
+        '<div class="cs-top"><span class="cmark st-' + st + '" aria-hidden="true">' + mark + '</span>' +
+        '<span class="code">' + esc(s.id) + '</span></div>' +
+        '<div class="r st-' + st + '">' + esc(String(s.rate)) + '%</div>' +
+      '</div>';
+  }
+  box.innerHTML =
+    '<div class="kpi-head">' +
+      '<div class="kpi-ic comp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>' +
+      '<div class="kpi-tt"><div class="kpi-label">' + esc(L(c, "label")) + '</div></div>' +
+      '<span class="kpi-tag comp-metric">' + esc(c.tag || "Critical") + '</span>' +
+    '</div>' +
+    '<div class="comp-main">' +
+      '<div class="comp-figure"><span class="comp-val">' + esc(bigTxt) + '</span> <span class="kpi-target">/ ' + esc(tgtTxt) + '</span>' +
+        (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
+      '</div>' +
+      '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value) / (Number(c.target) || 100) * 100) + '%"></i></div></div>' +
+      (c.gap ? '<div class="comp-gap"><span class="kpi-sub">' + esc(L(c, "gapLabel")) + '</span><span class="comp-gap-v">↗ ' + esc(c.gap) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="comp-sites">' + sitesHtml + '</div>';
+}
+
+/* ── 活動推播牆(橫向輪播;可放多張活動 EDM)────────────────── */
+var bcastIndex = 0;
+var bcastTimer = null;
+function bcastGo(i) {
+  const wall = document.getElementById("bcastWall");
+  if (!wall) return;
+  const slides = wall.querySelectorAll(".bslide");
+  const dots = wall.querySelectorAll(".bcast-dots button");
+  const n = slides.length;
+  if (!n) return;
+  bcastIndex = ((i % n) + n) % n;
+  for (let k = 0; k < n; k++) slides[k].classList.toggle("on", k === bcastIndex);
+  for (let k = 0; k < dots.length; k++) {
+    dots[k].classList.toggle("on", k === bcastIndex);
+    if (k === bcastIndex) dots[k].setAttribute("aria-current", "true");
+    else dots[k].removeAttribute("aria-current");
+  }
+}
+function bcastAuto() {
+  /* 已停用自動輪播:預設停在第一張,由使用者手動切換 */
+  if (bcastTimer) { clearInterval(bcastTimer); bcastTimer = null; }
+}
+function renderBroadcasts() {
+  const wall = document.getElementById("bcastWall");
+  if (!wall) return;
+  const items = DASHBOARD_DATA.broadcasts || [];
+  if (!items.length) { wall.style.display = "none"; if (bcastTimer) clearInterval(bcastTimer); return; }
+  wall.style.display = "";
+  let slidesH = "", dotsH = "";
+  for (let i = 0; i < items.length; i++) {
+    const b = items[i];
+    const link = b.link || DASHBOARD_DATA.learningUrl || "";
+    const ctaTxt = L(b, "cta");
+    const ctaH = ctaTxt ? '<a class="bcta" href="' + esc(link || "#") + '"' + (link ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(ctaTxt) + " →</a>" : "";
+    let hi = "";
+    const bullets = L(b, "bullets");
+    const steps = L(b, "steps");
+    if (bullets && bullets.length) {
+      hi = '<ul class="bfeatures">';
+      for (let j = 0; j < bullets.length; j++) hi += '<li><span class="bck">✓</span>' + esc(bullets[j]) + "</li>";
+      hi += "</ul>";
+    } else if (steps && steps.length) {
+      hi = '<div class="bsteps">';
+      for (let j = 0; j < steps.length; j++) hi += "<span>" + (j + 1) + " " + esc(steps[j]) + "</span>";
+      hi += '<span class="bgift">🎁</span></div>';
+    }
+    const bg = b.image
+      ? '<div class="bdeco bdeco-img" style="background-image:url(&#39;' + esc(b.image) + '&#39;)"></div>'
+      : '<div class="bdeco"></div>';
+    slidesH += '<div class="bslide tone-' + esc(b.tone || "party") + (b.image ? " has-img" : "") + (i === 0 ? " on" : "") + '">' +
+      bg +
+      '<div class="bslide-inner">' +
+        '<div class="bhead-row">' +
+          '<div class="bhead">' +
+            (b.tag ? '<span class="btag">' + esc(b.tag) + "</span>" : "") +
+            '<h3 class="btitle">' + esc(L(b, "title")) + "</h3>" +
+            (L(b, "sub") ? '<p class="bsub">' + esc(L(b, "sub")) + "</p>" : "") +
+          "</div>" +
+          ctaH +
+        "</div>" +
+        hi +
+      "</div>" +
+    "</div>";
+    dotsH += '<button type="button" aria-label="' + esc(L(b, "title")) + '"' + (i === 0 ? ' class="on" aria-current="true"' : "") + "></button>";
+  }
+  const nav = items.length > 1 ?
+    '<button class="bcast-btn bcast-prev" type="button" aria-label="' + esc(T("prevAct")) + '">‹</button>' +
+    '<button class="bcast-btn bcast-next" type="button" aria-label="' + esc(T("nextAct")) + '">›</button>' +
+    '<div class="bcast-dots">' + dotsH + "</div>" : "";
+  wall.innerHTML = '<div class="bcast-view">' + slidesH + nav + "</div>";
+  if (bcastIndex >= items.length) bcastIndex = 0;
+  bcastGo(bcastIndex);
+  bcastAuto();
+}
+
+(function () {
+  document.addEventListener("click", function (e) {
+    const wall = document.getElementById("bcastWall");
+    if (!wall || !e.target.closest || !wall.contains(e.target)) return;
+    if (e.target.closest(".bcast-next")) { bcastGo(bcastIndex + 1); bcastAuto(); }
+    else if (e.target.closest(".bcast-prev")) { bcastGo(bcastIndex - 1); bcastAuto(); }
+    else {
+      const dot = e.target.closest(".bcast-dots button");
+      if (dot) {
+        const dots = Array.prototype.slice.call(wall.querySelectorAll(".bcast-dots button"));
+        bcastGo(dots.indexOf(dot)); bcastAuto();
+      }
+    }
+  });
+  const wall = document.getElementById("bcastWall");
+  if (wall) {
+    wall.addEventListener("mouseenter", function () { if (bcastTimer) { clearInterval(bcastTimer); bcastTimer = null; } });
+    wall.addEventListener("mouseleave", bcastAuto);
+  }
+})();
+
+/* 慶祝彩帶:打氣/送出留言時的小驚喜(reduced-motion 時略過) */
+function celebrate(x, y) {
+  if (reducedMotion) return;
+  const icons = ["🎉", "✨", "🎊", "⭐", "💪", "🏆"];
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  document.body.appendChild(layer);
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement("span");
+    p.className = "confetti-p";
+    p.textContent = icons[i % icons.length];
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 120;
+    p.style.setProperty("--dx", (Math.cos(ang) * dist).toFixed(0) + "px");
+    p.style.setProperty("--dy", (Math.sin(ang) * dist - 70).toFixed(0) + "px");
+    p.style.fontSize = (12 + Math.random() * 16).toFixed(0) + "px";
+    layer.appendChild(p);
+  }
+  setTimeout(function () { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 1100);
+}
+
+function renderDashboard(data) {
+  if (data) DASHBOARD_DATA = data;
+  renderKpis();
+  renderCompliance();
+  renderBroadcasts();
+  renderSites();
+  renderTopLearners();
+  renderDeltas();
+
+  for (const node of document.querySelectorAll("[data-count]")) {
+    countUp(node, DASHBOARD_DATA.totals[node.dataset.count] || 0, 1100);
+  }
+  for (const s of DASHBOARD_DATA.sites) {
+    // SVG 卡與窄螢幕列表各有一份,一併更新
+    for (const c of document.querySelectorAll('[data-site-count="' + cssEsc(s.id) + '"]')) {
+      countUp(c, s.participants, 1100);
+    }
+  }
+  setTimeout(function () {
+    for (const s of DASHBOARD_DATA.sites) {
+      for (const m of document.querySelectorAll('[data-site-meter="' + cssEsc(s.id) + '"]')) {
+        m.style.width = clampRate(s.activationRate) + "%";
+      }
+    }
+  }, 60);
+
+  const when = DASHBOARD_DATA.updatedAt ? new Date(DASHBOARD_DATA.updatedAt) : new Date();
+  document.getElementById("lastUpdated").textContent =
+    T("updatedPrefix") + when.toLocaleString(T("locale"), { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+
+  /* 頁首「前往 LinkedIn Learning」按鈕:網址取自 DASHBOARD_DATA.learningUrl, 留空則隱藏 */
+  const ctaLL = document.getElementById("ctaLearning");
+  if (ctaLL) {
+    if (DASHBOARD_DATA.learningUrl) { ctaLL.style.display = ""; ctaLL.setAttribute("href", DASHBOARD_DATA.learningUrl); }
+    else { ctaLL.style.display = "none"; }
+  }
+
+  /* 資料重整時同步已開啟的彈窗;該據點已不存在則關閉 */
+  const evM = document.getElementById("eventModal");
+  if (evM && !evM.hidden) {
+    const openId = evM.getAttribute("data-open-site");
+    if (findSite(openId)) openEvent(openId);
+    else closeEvent();
+  }
+}
+
+/* ── 據點活動花絮彈窗 ─────────────────────────────────── */
+const evModal = document.getElementById("eventModal");
+const evBox = evModal.querySelector(".modal");
+let evLastFocus = null;
+let evSlideEls = [], evDotEls = [], evIndex = 0;
+
+/* 本機按讚(只存在使用者自己的瀏覽器;跨使用者統計需 IT 後端支援) */
+let likedSites = {};
+try { likedSites = JSON.parse(localStorage.getItem("llmap-likes") || "{}") || {}; } catch (err) { likedSites = {}; }
+function saveLikes() {
+  try { localStorage.setItem("llmap-likes", JSON.stringify(likedSites)); } catch (err) { /* 隱私模式等情況忽略 */ }
+}
+
+/* 本機留言板(只存在使用者自己的瀏覽器;跨使用者公開留言需 IT 後端) */
+let siteComments = {};
+try { siteComments = JSON.parse(localStorage.getItem("llmap-comments") || "{}") || {}; } catch (err) { siteComments = {}; }
+function saveComments() {
+  try { localStorage.setItem("llmap-comments", JSON.stringify(siteComments)); } catch (err) { /* 忽略 */ }
+}
+function commentKey() {
+  const act = evActs[evIndex] || {};
+  return (evOpenSite ? evOpenSite.id : "") + "::" + (act.name || "");
+}
+function closeBoard() {
+  const b = document.getElementById("evBoard");
+  if (b) b.hidden = true;
+  const btn = document.getElementById("evBoardBtn");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+function findSite(id) {
+  for (const s of DASHBOARD_DATA.sites) if (s.id === id) return s;
+  return null;
+}
+
+let evActs = [];      // 目前彈窗的活動清單(一張輪播 = 一個活動)
+let evOpenSite = null; // 目前彈窗的據點物件
+
+function buildSlide(act) {
+  const slide = document.createElement("div");
+  slide.className = "slide";
+  if (act && act.src) {
+    const img = document.createElement("img");
+    img.src = act.src;
+    img.alt = ((currentLang === "zh" ? (act.caption || act.name) : L(act, "name")) || T("photoAlt"));
+    img.loading = "lazy";
+    slide.appendChild(img);
+  } else {
+    const ph = document.createElement("div");
+    ph.className = "ph";
+    ph.innerHTML =
+      '<div class="emoji" aria-hidden="true">' + esc((act && act.emoji) || "📸") + "</div>" +
+      '<div class="cap">' + esc((act && (currentLang === "zh" ? (act.caption || act.name) : L(act, "name"))) || T("photoPending")) + "</div>";
+    slide.appendChild(ph);
+  }
+  return slide;
+}
+
+/* 相容舊資料結構(title + photos + quotes):視為同一活動的多張照片 */
+function normalizeActivities(ev) {
+  if (ev.activities && ev.activities.length) return ev.activities;
+  const photos = ev.photos && ev.photos.length ? ev.photos : [null];
+  return photos.map(function (p, i) {
+    return {
+      name: ev.title || "線上活動",
+      src: p && p.src, emoji: p && p.emoji, caption: p && p.caption,
+      quotes: i === 0 ? ev.quotes || [] : []
+    };
+  });
+}
+
+/* 標題、活動名、留言區跟著目前輪播的活動走 */
+function renderActivityInfo() {
+  if (!evOpenSite) return;
+  const act = evActs[evIndex] || {};
+  document.getElementById("evTitle").textContent = L(act, "name") || T("modalTitleFallback");
+  document.getElementById("evMeta").innerHTML =
+    "<span>📍 <b>" + esc(L(act, "name") || T("actFallback")) + "</b></span>" +
+    "<span>🔥 " + T("metaNow") + " <b>" + fmtNum(evOpenSite.participants) + "</b>" + T("metaPeople") + " · " + T("metaActivation") + " <b>" +
+    clampRate(evOpenSite.activationRate) + "%</b></span>";
+  const qBox = document.getElementById("evQuotes");
+  qBox.textContent = "";
+  for (const q of act.quotes || []) {
+    const bq = document.createElement("blockquote");
+    bq.textContent = "「" + q.text + "」";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = "— " + (q.who || "同仁");
+    bq.appendChild(who);
+    qBox.appendChild(bq);
+  }
+  const mine = siteComments[commentKey()] || [];
+  for (const q of mine) {
+    const bq = document.createElement("blockquote");
+    bq.className = "mine";
+    bq.textContent = "「" + q.text + "」";
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = "— " + (q.who || T("boardWho"));
+    bq.appendChild(who);
+    qBox.appendChild(bq);
+  }
+  qBox.style.display = ((act.quotes && act.quotes.length) || mine.length) ? "" : "none";
+}
+
+function goSlide(i) {
+  const n = evSlideEls.length;
+  if (!n) return;
+  evIndex = ((i % n) + n) % n;
+  for (let k = 0; k < n; k++) {
+    evSlideEls[k].classList.toggle("on", k === evIndex);
+    evDotEls[k].classList.toggle("on", k === evIndex);
+    if (k === evIndex) evDotEls[k].setAttribute("aria-current", "true");
+    else evDotEls[k].removeAttribute("aria-current");
+  }
+  closeBoard();
+  renderActivityInfo();
+  /* 讀屏播報目前活動 */
+  const live = document.getElementById("evLive");
+  if (live) {
+    const act = evActs[evIndex] || {};
+    live.textContent = T("slidePos1") + (evIndex + 1) + T("slidePos2") + n + T("slidePos3") + (L(act, "name") || "");
+  }
+}
+
+function renderLikeBtn(s) {
+  const btn = document.getElementById("evLike");
+  const liked = !!likedSites[s.id];
+  const count = (Number(s.event && s.event.likes) || 0) + (liked ? 1 : 0);
+  btn.classList.toggle("liked", liked);
+  btn.setAttribute("aria-pressed", liked ? "true" : "false");
+  btn.textContent = (liked ? T("liked") : T("likePrefix") + s.name + T("likeSuffix")) + " · " + count;
+}
+
+function openEvent(id) {
+  const s = findSite(id);
+  if (!s) return;
+  const ev = s.event || {};
+  if (evModal.hidden) evLastFocus = document.activeElement; // 已開啟時重整內容,不覆蓋回復目標
+
+  evOpenSite = s;
+  evActs = normalizeActivities(ev);
+
+  document.getElementById("evSite").textContent = s.name + " · " + L(s, "city");
+
+  /* 輪播:一張 = 一個活動,固定從第一個(AI Literacy Journey)開始 */
+  const slidesBox = document.getElementById("evSlides");
+  const dotsBox = document.getElementById("evDots");
+  slidesBox.textContent = ""; dotsBox.textContent = "";
+  evSlideEls = []; evDotEls = [];
+  for (let i = 0; i < evActs.length; i++) {
+    const slide = buildSlide(evActs[i]);
+    slidesBox.appendChild(slide);
+    evSlideEls.push(slide);
+    const dot = document.createElement("button");
+    dot.setAttribute("aria-label", T("dotAct") + (i + 1) + T("dotActSuffix") + (evActs[i] && evActs[i].name ? ":" + evActs[i].name : ""));
+    (function (idx) { dot.addEventListener("click", function () { goSlide(idx); }); })(i);
+    dotsBox.appendChild(dot);
+    evDotEls.push(dot);
+  }
+  const showNav = evActs.length > 1;
+  document.getElementById("evPrev").style.display = showNav ? "" : "none";
+  document.getElementById("evNext").style.display = showNav ? "" : "none";
+  dotsBox.style.display = showNav ? "" : "none";
+  goSlide(0); // 標題/活動名/留言由 renderActivityInfo() 一併帶出
+
+  /* 行動呼籲 */
+  const teams = document.getElementById("evTeams");
+  if (ev.teamsUrl) {
+    teams.style.display = "";
+    teams.href = ev.teamsUrl;
+    teams.textContent = T("teamsCta");
+  } else {
+    teams.style.display = "none";
+  }
+  renderLikeBtn(s);
+
+  evModal.setAttribute("data-open-site", s.id);
+  if (evModal.hidden) {
+    evModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    const page = document.querySelector(".page");
+    if (page) page.setAttribute("aria-hidden", "true"); // 背景內容對讀屏隱藏
+    document.getElementById("evClose").focus();
+  }
+}
+
+function closeEvent() {
+  evModal.hidden = true;
+  document.body.style.overflow = "";
+  const page = document.querySelector(".page");
+  if (page) page.removeAttribute("aria-hidden");
+  /* 焦點回到開啟來源;若重新渲染後原節點已被換掉,退回同據點的新卡片 */
+  let target = evLastFocus;
+  if (!target || !document.contains(target)) {
+    const openId = evModal.getAttribute("data-open-site") || "";
+    target = document.querySelector('.scard[data-site-id="' + cssEsc(openId) + '"]');
+  }
+  if (target && target.focus) target.focus();
+}
+
+/* 點擊/鍵盤開啟(事件委派,重新渲染後依然有效) */
+document.addEventListener("click", function (e) {
+  if (!e.target.closest) return;
+  const t = e.target.closest("[data-site-id]");
+  if (t && !evModal.contains(t)) openEvent(t.getAttribute("data-site-id"));
+});
+
+/* KPI 各據點分項:收合/展開(三張卡同步,狀態存 localStorage) */
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest && e.target.closest(".kpi-sites-toggle");
+  if (!btn) return;
+  kpiSitesOpen = !kpiSitesOpen;
+  try { localStorage.setItem("llmap-kpisites", kpiSitesOpen ? "1" : "0"); } catch (err) { /* 隱私模式忽略 */ }
+  for (const l of document.querySelectorAll(".kpi-sites-list")) l.hidden = !kpiSitesOpen;
+  for (const b of document.querySelectorAll(".kpi-sites-toggle")) b.setAttribute("aria-expanded", kpiSitesOpen ? "true" : "false");
+});
+document.addEventListener("keydown", function (e) {
+  if ((e.key === "Enter" || e.key === " ") && !e.repeat && e.target.closest) {
+    const t = e.target.closest('.scard[data-site-id]');
+    if (t) { e.preventDefault(); openEvent(t.getAttribute("data-site-id")); }
+  }
+});
+
+document.getElementById("evClose").addEventListener("click", closeEvent);
+/* 只在 mousedown 也落在遮罩上才關閉:在窗內拖曳選字、放開在遮罩上不誤關 */
+let backdropPressed = false;
+evModal.addEventListener("mousedown", function (e) { backdropPressed = e.target === evModal; });
+evModal.addEventListener("click", function (e) {
+  if (e.target === evModal && backdropPressed) closeEvent();
+  backdropPressed = false;
+});
+document.getElementById("evPrev").addEventListener("click", function () { goSlide(evIndex - 1); });
+document.getElementById("evNext").addEventListener("click", function () { goSlide(evIndex + 1); });
+document.getElementById("evLike").addEventListener("click", function () {
+  const s = findSite(evModal.getAttribute("data-open-site"));
+  if (!s) return;
+  const wasLiked = !!likedSites[s.id];
+  if (likedSites[s.id]) delete likedSites[s.id];
+  else likedSites[s.id] = true;
+  saveLikes();
+  renderLikeBtn(s);
+  if (!wasLiked) { const r = this.getBoundingClientRect(); celebrate(r.left + r.width / 2, r.top); }
+});
+/* 留言板:開合表單 */
+document.getElementById("evBoardBtn").addEventListener("click", function () {
+  const board = document.getElementById("evBoard");
+  if (!board) return;
+  const willOpen = board.hidden;
+  board.hidden = !willOpen;
+  this.setAttribute("aria-expanded", willOpen ? "true" : "false");
+  if (willOpen) { const t = document.getElementById("evBoardText"); if (t) t.focus(); }
+});
+/* 送出留言(僅存本機瀏覽器;跨使用者公開留言需後端) */
+document.getElementById("evBoardSend").addEventListener("click", function () {
+  const textEl = document.getElementById("evBoardText");
+  const nameEl = document.getElementById("evBoardName");
+  const text = (textEl.value || "").trim();
+  if (!text) { textEl.focus(); return; }
+  const key = commentKey();
+  if (!siteComments[key]) siteComments[key] = [];
+  siteComments[key].push({ text: text, who: (nameEl.value || "").trim() });
+  saveComments();
+  textEl.value = ""; nameEl.value = "";
+  renderActivityInfo();
+  const r = this.getBoundingClientRect(); celebrate(r.left + r.width / 2, r.top);
+  textEl.focus();
+});
+document.getElementById("evTeams").addEventListener("click", function (e) {
+  if (this.getAttribute("href") === "#") e.preventDefault(); // demo:連結未設定時不跳頁
+});
+
+/* 彈窗鍵盤操作:Esc 關閉、左右鍵換照片、Tab 焦點留在窗內 */
+document.addEventListener("keydown", function (e) {
+  if (evModal.hidden) return;
+  if (e.key === "Escape") { closeEvent(); return; }
+  if (e.key === "ArrowLeft") { goSlide(evIndex - 1); return; }
+  if (e.key === "ArrowRight") { goSlide(evIndex + 1); return; }
+  if (e.key === "Tab") {
+    const nodes = evBox.querySelectorAll('button, a[href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+    const list = [];
+    for (const f of nodes) if (f.offsetParent !== null) list.push(f);
+    if (!list.length) return;
+    const first = list[0], last = list[list.length - 1];
+    const active = document.activeElement;
+    if (!evBox.contains(active)) { e.preventDefault(); first.focus(); } // 焦點在窗外(如點了不可聚焦的文字)時拉回窗內
+    else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+renderDashboard();
+
+/* demo: learningUrl 若為 "#"(哨兵)則不跳頁; IT 設定真實網址後正常於新分頁開啟 */
+(function () {
+  const ll = document.getElementById("ctaLearning");
+  if (ll) ll.addEventListener("click", function (e) { if (this.getAttribute("href") === "#") e.preventDefault(); });
+})();
+
+/* ── 深/淺色主題切換 ──────────────────────────────────
+   頁首腳本已依 llmap-theme(或系統設定)先套上 data-theme;
+   這裡負責按鈕切換、儲存選擇,並在使用者尚未手動選過時跟隨系統變化。 */
+(function () {
+  const root = document.documentElement;
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+
+  function syncBtn() {
+    const dark = root.getAttribute("data-theme") === "dark";
+    const label = dark ? T("themeToLight") : T("themeToDark");
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
+    btn.setAttribute("aria-pressed", dark ? "true" : "false");
+  }
+  syncBtn();
+
+  btn.addEventListener("click", function () {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("llmap-theme", next); } catch (err) { /* 隱私模式等情況忽略 */ }
+    syncBtn();
+  });
+
+  /* 使用者沒手動選過時,即時跟隨系統深/淺色設定變化 */
+  if (window.matchMedia) {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onSystemChange = function (e) {
+      let chosen = false;
+      try { chosen = !!localStorage.getItem("llmap-theme"); } catch (err) { /* 忽略 */ }
+      if (chosen) return;
+      root.setAttribute("data-theme", e.matches ? "dark" : "light");
+      syncBtn();
+    };
+    if (mq.addEventListener) mq.addEventListener("change", onSystemChange);
+    else if (mq.addListener) mq.addListener(onSystemChange);
+  }
+})();
+
+/* 深連結:網址帶 #site=據點ID 直接開啟該據點花絮(方便在 Teams 分享) */
+(function () {
+  const m = /^#site=(.+)$/.exec(decodeURIComponent(location.hash || ""));
+  if (m) openEvent(m[1]);
+})();
+
+/* ── 語言切換(繁中 / English):套用靜態文案 + 重繪動態文字,選擇存 localStorage ── */
+function applyI18n() {
+  document.documentElement.setAttribute("lang", currentLang === "zh" ? "zh-Hant" : currentLang);
+  for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = T(node.getAttribute("data-i18n"));
+  for (const node of document.querySelectorAll("[data-i18n-aria]")) node.setAttribute("aria-label", T(node.getAttribute("data-i18n-aria")));
+  for (const node of document.querySelectorAll("[data-i18n-ph]")) node.setAttribute("placeholder", T(node.getAttribute("data-i18n-ph")));
+  const tb = document.getElementById("themeToggle");
+  if (tb) {
+    const lbl = document.documentElement.getAttribute("data-theme") === "dark" ? T("themeToLight") : T("themeToDark");
+    tb.setAttribute("aria-label", lbl); tb.title = lbl;
+  }
+}
+function syncLangBtns() {
+  for (const b of document.querySelectorAll(".lang-toggle button")) {
+    const on = b.getAttribute("data-lang") === currentLang;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+function setLang(l) {
+  currentLang = (l && I18N[l]) ? l : "zh";
+  try { localStorage.setItem("llmap-lang", currentLang); } catch (err) { /* 隱私模式忽略 */ }
+  applyI18n();
+  renderDashboard();
+  syncLangBtns();
+}
+(function () {
+  for (const b of document.querySelectorAll(".lang-toggle button")) {
+    b.addEventListener("click", function () { setLang(this.getAttribute("data-lang")); });
+  }
+  applyI18n();
+  syncLangBtns();
+})();
+
+/* ── 背景切換(預設/星空/極光;存 localStorage,早期腳本已先套) ── */
+
+</script>
+</body>
+</html>
