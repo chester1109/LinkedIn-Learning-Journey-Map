@@ -34,7 +34,7 @@
   4. 世界地圖(大洲形狀 + 城市燈光)由 Natural Earth 110m(公有領域)
      資料預先計算並內嵌於 SVG,無需維護;重新產生方式見 tools/README.md。
   5. 據點卡片可點擊 → 活動花絮彈窗:
-       - 一張輪播 = 一個活動(activities 陣列),第一個固定放 Launch Party;
+       - 一張輪播 = 一個活動(activities 陣列),第一個固定放 AI Literacy Journey;
          標題、活動名與留言區會跟著目前輪播的活動切換。
        - activities[].src 填入照片網址(訓練網站上的相對路徑即可)就會
          顯示真實照片;留空則顯示佔位圖卡。照片規格:16:9(建議
@@ -299,7 +299,7 @@
   /* ── 活動推播牆 ── */
   .bcast { margin-bottom: 14px; }
   .bcast-view { position: relative; border-radius: 18px; overflow: hidden; box-shadow: var(--tile-shadow); }
-  .bslide { display: none; position: relative; min-height: 300px; padding: 26px 30px; color: #ffffff; overflow: hidden; }
+  .bslide { display: none; position: relative; aspect-ratio: 2.33 / 1; min-height: 330px; padding: 26px 30px; color: #ffffff; overflow: hidden; }
   .bslide.on { display: block; }
   .tone-party { background: linear-gradient(120deg, #5b21b6 0%, #be185d 55%, #1d4ed8 100%); }
   .tone-challenge { background: linear-gradient(120deg, #0f766e 0%, #1d4ed8 100%); }
@@ -310,15 +310,15 @@
   .bdeco-img { background-size: cover; background-position: center; }
   .bdeco-img::before { content: none; }
   .bdeco-img::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background: linear-gradient(to top, rgba(8, 16, 34, 0.62) 0%, rgba(8, 16, 34, 0) 46%), linear-gradient(90deg, rgba(8, 16, 34, 0.92) 0%, rgba(8, 16, 34, 0.6) 60%, rgba(8, 16, 34, 0.42) 100%); }
-  .bslide-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; min-height: 248px; justify-content: space-between; }
+  .bslide-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; height: 100%; min-height: 278px; justify-content: space-between; }
   .bhead-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .bhead { min-width: 0; }
   .btag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(255, 255, 255, 0.2); padding: 3px 10px; border-radius: 999px; }
   .btitle { font-size: clamp(22px, 3vw, 32px); font-weight: 800; margin-top: 10px; color: #ffffff; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25); }
   .bsub { font-size: 15px; margin-top: 6px; color: rgba(255, 255, 255, 0.94); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35); }
-  .bfeatures { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 26px; margin: 0; }
-  .bfeatures li { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4); }
-  .bck { flex: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: #16a34a; font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+  .bfeatures { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
+  .bfeatures li { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #ffffff; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+  .bck { flex: none; width: 15px; height: 15px; border-radius: 50%; background: rgba(255, 255, 255, 0.92); color: #16a34a; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
   .bsteps { display: flex; flex-wrap: wrap; gap: 8px; }
   .bsteps span { font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3); padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
   .bsteps .bgift { background: rgba(255, 255, 255, 0.92); color: #7c3aed; border-color: transparent; }
@@ -339,7 +339,7 @@
   .confetti-p { position: fixed; transform: translate(-50%, -50%); will-change: transform, opacity; animation: confPop 1s ease-out forwards; }
   @keyframes confPop { 0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(35deg); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .bcta { animation: none; } }
-  @media (max-width: 640px) { .bslide { padding: 20px; min-height: 0; } .bslide-inner { min-height: 0; } .bfeatures { grid-template-columns: 1fr; } .bcta { width: 100%; text-align: center; } }
+  @media (max-width: 640px) { .bslide { padding: 20px; min-height: 0; aspect-ratio: auto; } .bslide-inner { min-height: 0; } .bcta { width: 100%; text-align: center; } }
 
   /* ── 統計磁貼 ─────────────────────────── */
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
@@ -770,21 +770,28 @@ var DASHBOARD_DATA = {
       participants: 872, activationRate: 78, courses: 1842,
       card: { x: 846, y: 52 }, anchor: "bl",
       event: {
-        // activities:一張輪播 = 一個活動;第一個固定放 Launch Party。
+        // activities:一張輪播 = 一個活動;第一個固定放 AI Literacy Journey。
         // src 填照片網址(16:9,建議 1280x720)後自動顯示;留空 = 佔位圖卡。
         // quotes 是「該活動」的同仁留言,會跟著輪播切換。
         activities: [
           {
-            name: "Launch Party", src: "photos/wyhq-launch-party.jpg", emoji: "🎉", caption: "Launch Party 大合照",
-            quotes: [{ text: "AI 助手推薦的課程太實用了！", who: "人資夥伴" }]
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "Learn、Practice、Grow 三步驟很清楚，跟著做就完成了！", who: "人資夥伴" }]
           },
           {
-            name: "AI Selfie 挑戰", nameEn: "AI Selfie Challenge", nameEs: "Reto AI Selfie", src: "photos/wyhq-ai-selfie.jpg", emoji: "🤳", caption: "AI Selfie 挑戰",
-            quotes: [{ text: "AI Selfie 大家玩瘋了，明天繼續！", who: "研發同仁" }]
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "photos/wyhq-ai-selfie.jpg", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [
+              { text: "五大關卡一次闖完，超有成就感！", who: "研發同仁" },
+              { text: "AI 助手推薦的課程太實用了！", who: "人資夥伴" }
+            ]
           },
           {
-            name: "AI 素養學習路徑", nameEn: "AI Literacy Learning Path", nameEs: "Ruta de Alfabetización en IA", src: "photos/wyhq-ai-learning-path.jpg", emoji: "📚", caption: "AI 素養學習路徑結業",
-            quotes: [{ text: "三門課全部完成，證書入手！", who: "新進同仁" }]
+            name: "學習時數衝刺賽", nameEn: "Learning Hours Sprint", nameEs: "Sprint de Horas de Aprendizaje", src: "photos/learning-hours-sprint.jpg", emoji: "🏆", caption: "學習時數衝刺賽",
+            quotes: [
+              { text: "每天多學 10 分鐘，這週衝進排行榜前十！", who: "新進同仁" },
+              { text: "跟團隊一起衝時數，超有動力！", who: "研發同仁" }
+            ]
           }
         ],
         likes: 18,
@@ -800,8 +807,13 @@ var DASHBOARD_DATA = {
       event: {
         activities: [
           {
-            name: "Launch Party", src: "", emoji: "🎉", caption: "Launch Party 大合照",
-            quotes: [{ text: "全廠一起啟動，氣氛超熱！", who: "廠務同仁" }]
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "AI 基礎課很好懂，馬上就用在日常報表上！", who: "製造部同仁" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "線上一起闖關，氣氛超熱！", who: "廠務同仁" }]
           },
           {
             name: "午後點心學習會", nameEn: "Afternoon Snack & Learn", nameEs: "Merienda y Aprendizaje", src: "", emoji: "🧋",
@@ -825,8 +837,13 @@ var DASHBOARD_DATA = {
       event: {
         activities: [
           {
-            name: "Launch Party", src: "", emoji: "🎉", caption: "Launch Party 大合照",
-            quotes: [{ text: "午餐學習會超讚，下週還要！", who: "WYMY Learning Champion" }]
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "拿到限定成就徽章，成就感滿滿！", who: "WYMY Learning Champion" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
+            quotes: [{ text: "線上闖關超好玩，下週還要！", who: "WYMY Learning Champion" }]
           },
           {
             name: "AI 學習任務挑戰", nameEn: "AI Learning Quest", nameEs: "Misión de Aprendizaje de IA", src: "", emoji: "🎯",
@@ -850,7 +867,12 @@ var DASHBOARD_DATA = {
       event: {
         activities: [
           {
-            name: "Launch Party", src: "", emoji: "🎉", caption: "Launch Party 大合照",
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "The Learn-Practice-Grow path made it easy to start.", who: "Engineering Team" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
             quotes: [{ text: "Great kickoff — the AI learning path is spot on.", who: "Engineering Team" }]
           },
           {
@@ -875,7 +897,12 @@ var DASHBOARD_DATA = {
       event: {
         activities: [
           {
-            name: "Launch Party", src: "", emoji: "🎉", caption: "Launch Party 大合照",
+            name: "AI Literacy Journey", nameEn: "AI Literacy Journey", nameEs: "AI Literacy Journey",
+            src: "photos/ai-literacy-journey-team.jpg", emoji: "🚀", caption: "AI Literacy Journey",
+            quotes: [{ text: "¡La ruta de alfabetización en IA fue muy práctica!", who: "Calidad" }]
+          },
+          {
+            name: "線上闖關挑戰", nameEn: "Online Learning Quest", nameEs: "Reto en Línea", src: "", emoji: "💻", caption: "線上闖關挑戰",
             quotes: [{ text: "¡Los cursos de IA están increíbles!", who: "Producción" }]
           },
           {
@@ -907,19 +934,19 @@ var DASHBOARD_DATA = {
   ],
   /* 活動推播牆:一張 = 一個活動 EDM;可放多筆。tone: party/challenge/leader */
   broadcasts: [
-    { tone: "party", image: "photos/wyhq-launch-party.jpg", tag: "HQ · Launch Party",
-      title: "LinkedIn Learning 啟動派對", titleEn: "LinkedIn Learning Launch Party", titleEs: "Fiesta de Lanzamiento de LinkedIn Learning",
-      sub: "完成闖關解鎖獎勵,抽 AirPods Max 與 LinkedIn 好禮!", subEn: "Complete the Launch Journey Challenge — win AirPods Max & LinkedIn merch!", subEs: "¡Completa el reto y gana AirPods Max y regalos de LinkedIn!",
+    { tone: "challenge", image: "photos/ai-literacy-journey-full.jpg", tag: "全球 · 學習旅程",
+      title: "AI Literacy Journey", titleEn: "AI Literacy Journey", titleEs: "AI Literacy Journey",
+      sub: "🎯 完成 3 門 AI 課程，挑戰 AI 新技能！", subEn: "🎯 Complete 3 AI courses and take on new AI skills!", subEs: "🎯 ¡Completa 3 cursos de IA y domina nuevas habilidades de IA!",
+      cta: "開始旅程", ctaEn: "Start the journey", ctaEs: "Comenzar el viaje",
+      bullets: ["掌握 AI 基礎知識", "提升工作效率", "培養 AI 時代必備能力", "完成旅程即可獲得限定成就徽章"], bulletsEn: ["Master AI fundamentals", "Work more efficiently", "Build must-have AI-era skills", "Finish the journey to earn a limited badge"], bulletsEs: ["Domina los fundamentos de IA", "Trabaja con más eficiencia", "Desarrolla habilidades clave de la era IA", "Termina el viaje y gana una insignia"] },
+    { tone: "party", image: "photos/wyhq-ai-selfie.jpg", tag: "全球 · 線上活動",
+      title: "線上闖關挑戰", titleEn: "Online Learning Quest", titleEs: "Reto de Aprendizaje en Línea",
+      sub: "🎯 全程線上參與，完成 5 大關卡，解鎖挑戰獎勵！完成所有關卡，即有機會抽 LinkedIn 精美好禮 🎁", subEn: "🎯 Join online anywhere — clear all 5 levels to unlock the challenge reward! Finish them all for a chance to win LinkedIn goodies 🎁", subEs: "🎯 Participa en línea — ¡supera los 5 niveles y desbloquea la recompensa! Complétalos todos y participa por regalos de LinkedIn 🎁",
       steps: ["下載 App", "探索興趣", "AI 教練", "設定時數目標", "開始 AI 課程"],
       stepsEn: ["Download app", "Discover interests", "AI coaching", "Set hour goal", "Start AI course"],
       stepsEs: ["Descarga la app", "Descubre intereses", "Coach de IA", "Fija tu meta", "Empieza un curso"],
-      cta: "立即闖關", ctaEn: "Join the challenge", ctaEs: "Únete al reto" },
-    { tone: "challenge", image: "photos/wyhq-ai-learning-path.jpg", tag: "全球 · 挑戰賽",
-      title: "AI 素養月挑戰", titleEn: "AI Literacy Month Challenge", titleEs: "Reto del Mes de Alfabetización en IA",
-      sub: "本月完成 3 門 AI 課程,解鎖限定徽章!", subEn: "Finish 3 AI courses this month to unlock a limited badge!", subEs: "¡Completa 3 cursos de IA este mes y desbloquea una insignia!",
-      cta: "立即挑戰", ctaEn: "Start now", ctaEs: "Empezar ahora",
-      bullets: ["完成 3 門 AI 課程", "解鎖限定成就徽章", "登上全球學習排行榜"], bulletsEn: ["Finish 3 AI courses", "Unlock a limited badge", "Climb the global leaderboard"], bulletsEs: ["Completa 3 cursos de IA", "Desbloquea una insignia", "Sube en el ranking global"] },
-    { tone: "leader", image: "photos/wyhq-ai-selfie.jpg", tag: "全球 · 排行榜",
+      cta: "立即線上闖關", ctaEn: "Start the quest online", ctaEs: "Empieza el reto en línea" },
+    { tone: "leader", image: "photos/learning-hours-sprint-full.jpg", tag: "全球 · 排行榜",
       title: "學習時數衝刺賽", titleEn: "Learning Hours Sprint", titleEs: "Sprint de Horas de Aprendizaje",
       sub: "衝進全球 Top 10,登上學習排行榜!", subEn: "Reach the global Top 10 learning leaderboard!", subEs: "¡Llega al Top 10 mundial de aprendizaje!",
       cta: "查看排行榜", ctaEn: "View leaderboard", ctaEs: "Ver ranking",
@@ -1598,7 +1625,7 @@ function normalizeActivities(ev) {
   const photos = ev.photos && ev.photos.length ? ev.photos : [null];
   return photos.map(function (p, i) {
     return {
-      name: ev.title || "Launch 活動",
+      name: ev.title || "線上活動",
       src: p && p.src, emoji: p && p.emoji, caption: p && p.caption,
       quotes: i === 0 ? ev.quotes || [] : []
     };
@@ -1679,7 +1706,7 @@ function openEvent(id) {
 
   document.getElementById("evSite").textContent = s.name + " · " + L(s, "city");
 
-  /* 輪播:一張 = 一個活動,固定從第一個(Launch Party)開始 */
+  /* 輪播:一張 = 一個活動,固定從第一個(AI Literacy Journey)開始 */
   const slidesBox = document.getElementById("evSlides");
   const dotsBox = document.getElementById("evDots");
   slidesBox.textContent = ""; dotsBox.textContent = "";
