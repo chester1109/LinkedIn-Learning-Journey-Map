@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="robots" content="noindex, nofollow">
-<title>LinkedIn Learning Journey Map</title>
+<title>Global LinkedIn Learning Hub</title>
 <!--
   ══════════════════════════════════════════════════════════════════
   LinkedIn Learning 全球學習進度地圖 — 單一自包含 HTML(無外部相依)
@@ -179,6 +179,7 @@
   @media (prefers-reduced-motion: reduce) { .title-mark { animation: none; } }
   .hero-baseline .sub { margin-top: 0; }
   .hero-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+  .hero-actions { flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
   .hero-badge {
     display: inline-flex; align-items: center; gap: 8px;
     background: var(--card); border: 1px solid var(--hairline); border-radius: 999px;
@@ -219,6 +220,23 @@
   .cta-ll .arrow { transition: transform 0.2s; }
   .cta-ll:hover .arrow { transform: translateX(3px); }
   :root[data-theme="dark"] .cta-ll { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(10, 102, 194, 0.42); }
+
+  /* 頁首次要行動:操作說明 SOP(與 LinkedIn Learning 同級,配色區分) */
+  .cta-sop {
+    flex: none; display: inline-flex; align-items: center; gap: 8px;
+    background: #0f766e; color: #ffffff; text-decoration: none;
+    border: none; border-radius: 999px; padding: 10px 18px;
+    font-size: 14px; font-weight: 650; letter-spacing: 0.01em; white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(15, 118, 110, 0.25), 0 6px 18px rgba(15, 118, 110, 0.28);
+    transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .cta-sop:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .cta-sop:active { transform: translateY(0); }
+  .cta-sop:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+  .cta-sop svg { width: 18px; height: 18px; flex: none; }
+  .cta-sop .arrow { transition: transform 0.2s; }
+  .cta-sop:hover .arrow { transform: translateX(3px); }
+  :root[data-theme="dark"] .cta-sop { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(15, 118, 110, 0.45); }
 
   /* 語言切換(繁中 / EN)分段按鈕 */
   .lang-toggle { flex: none; display: inline-flex; align-items: center; gap: 2px; background: var(--card); border: 1px solid var(--hairline); border-radius: 999px; padding: 2px; box-shadow: var(--tile-shadow); }
@@ -424,16 +442,14 @@
   .site-list { display: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; padding-right: 12px; }
   .site-list .scard { height: auto; }
 
-  /* 據點卡可點擊:懸停顯示提示,聚焦顯示外框 */
-  .site { cursor: pointer; }
-  .scard { position: relative; cursor: pointer; }
+  /* 據點卡為純資訊卡(活動花絮功能已停用) */
+  .site { cursor: default; }
+  .scard { position: relative; }
   .scard .s-hint {
     position: absolute; left: 11px; right: 11px; bottom: 9px;
     font-size: 10.5px; color: var(--glow); opacity: 0;
     transition: opacity 0.18s; pointer-events: none; white-space: nowrap;
   }
-  .site:hover .s-hint, .scard:hover .s-hint, .scard:focus-visible .s-hint { opacity: 1; }
-  .site:hover .s-rate, .scard:hover .s-rate, .scard:focus-visible .s-rate { opacity: 0; }
   .scard:focus-visible { outline: 2px solid var(--glow); outline-offset: -2px; } /* 內縮:foreignObject 會裁掉外凸的外框 */
   .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   /* 觸控裝置沒有 hover:列表卡的提示常駐顯示 */
@@ -609,7 +625,7 @@
   <header class="hero">
     <div class="hero-lead">
       <span class="title-mark" aria-hidden="true"><svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" focusable="false"><radialGradient id="IconifyId17ecdb2904d178eab8950" cx="43.972" cy="29.066" r="90.951" gradientTransform="matrix(.6257 .78 -.5815 .4665 33.359 -18.792)" gradientUnits="userSpaceOnUse"><stop offset=".506" stop-color="#17a1f3"></stop><stop offset=".767" stop-color="#1b7ffa"></stop><stop offset=".962" stop-color="#1366f0"></stop><stop offset="1" stop-color="#1160ee"></stop></radialGradient><path d="M3.14 64.68c.68 24.4 16.99 59.55 61.45 59.1c43.32-.44 60.76-36.3 59.4-62.06c-1.37-25.76-21.66-57.46-61.79-57.23c-40.14.22-59.8 33.96-59.06 60.19z" fill="url(#IconifyId17ecdb2904d178eab8950)"></path><path d="M90.52 93.68c-.63-.24-1.1.35-1.75 1.45c-.65 1.1-1.35 2-1.8 2.35s-3.1 1.95-3.3 2.85c-.2.9 0 1.8 0 2.65c0 .85-.15 2.1-.15 2.65c0 .55-.6 1.05.2 1.85s1.4.3 1.95-.45s1.85-3.15 2.15-4.2c.2-.71.6-1.75.8-2.3c.2-.55 1.85-3.2 2.1-4.2c.26-1 .61-2.35-.2-2.65z" fill="#7add8a"></path><path d="M66.38 40.12c0 .36.26.73.93.73s.95-.42.9-.97c-.04-.51-.56-.67-1.01-.63c-.36.03-.82.3-.82.87z" fill="#bedc9d"></path><path d="M44.54 32.36c-.46-.02-1.2.41-1.25.82c-.11.98-.42 2.84.32 2.95c.68.1 1.03-1.09 1.14-1.54s.5-2.2-.21-2.23z" fill="#95da93"></path><path d="M41.06 16.97c-.89 0-1.48.76-1.62 1.22c-.15.5-.05 1.87-.47 2.05c-.57.24-1.48.06-2.08.25c-.78.25-2.4 1.73-2.36 2.08c.03.32.42 1.02 1.31 1.16c.3.05.61-.05.69-.24c.04-.1.25-.25.42-.19c.24.08.21.56.4.61c.19.05 2.2.08 2.44 0c.24-.08 1.49-.82 1.67-1.59c.19-.77.26-2.41.33-3.75c.07-1.15-.36-1.6-.73-1.6z" fill="#7add8a"></path><path d="M38.28 9.2s-1.54 1.91-2.5 2.81c-.96.9-2.63 2.2-2.47 2.84c.05.21.61.74 1.33.56c.72-.19 2.02-1.01 3.5-1.54c1.49-.53 2.49-.58 2.79-.72c.29-.13 3.56-1.75 4.83-2.31s6.13-1.96 7.27-2.36s1.99-.77 1.8-1.51c-.19-.74-2.44-.64-3.79-.64s-2.56-.4-2.56-.4s-3.29.76-5.69 1.57c-2.38.81-4.51 1.7-4.51 1.7z" fill="#ffffff"></path><path d="M69.22 8.02c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c-.63 3.2.1 8.55 0 9.92s.05 2.2-.68 2.94s-3.73 3.36-4.25 4.3s-.16 2.1-.52 3.41s-2.68 3.41-3.46 3.83s-.58 1.21-2.41 2.78s-2.41 2.1-3.2 2.2s-5.09.31-6.72-.31c-1.63-.63-2.73-1.63-3.2-2.15s-.94-1.1-1.68-1.52c-.73-.42-1.57-1.31-2.15-2.1s-2.15-2.89-3.67-4.56s-2.31-2.47-2.41-4.3s1.57-3.73 1.57-3.73s-.47-3.25-1.84-5.67s-3.2-2.83-4.3-5.3c-1.1-2.47-.58-4.41-.47-5.19s-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-1.99-2.47-3.25-2.52s-2.1.89-3.04.89s-1.42-.73-2.05-.63s-1.68 1.05-2.31 1.68s-1.1 1.21-1.21 1.47s.47 1.42-.26 1.89s-1.73.58-2.1.63s-1.68-.16-1.94.68s-.16 1.78.21 2.36s.52 1.15-.16 1.73s-1.26.73-1.68-.05c-.42-.79-.16-.84-.47-1.31s-1.21-1.94-1.57-3.04s-.63-1.89-1.26-2.62s-1.63-.79-2.31-1.42s-1.31-1.52-1.31-1.52s-.52.94.16 2.57s2.36 2.89 2.47 3.52s-.16 1.68-.63 1.68s-1.05-.52-1.73-1.31s-1.89-1.63-2.52-2.2s-1.36-3.04-1.73-3.1s-1.15 1.42-2.31 1.78s-2.15.42-2.15.42s-.73 1.68-1.73 2.2s-1.52.84-1.99 1.52s-1.1 1.94-1.57 2.41c-.47.47-1.78.84-2.2 1s-1.31.42-1.57.42s-1.68-.94-1.89-1.63c-.21-.68-.63-1.1-.63-1.57s1.21-2.36 1.52-3.25s.52-1.84 1.36-2.52s1.15 0 2.41.05s2.78-.1 2.78-.1s.16-.37.31-.73s.52-.31.42-.58s-1.31-1.05-1.42-1.63c-.1-.58.1-.79.52-1.05s.94-.73.94-.73s.31-.42 1-.68s1.31.42 1.78.26c.47-.16 1.78-.84 2.31-1.47s1.15-1.31 1.68-1.63s1.84-.42 2.31-.73s.47-1.05.89-1.21s1.05-.42 1.78.1s1.05 1.47 1.84 1.57s1.52-.21 1.84-.37s1-1.15 1.89-1.68c.89-.52 1.47-.84 1.94-1.36s.73-1 .73-1s1.36-.16 1.99-.31s2.31-.26 1.99-1.26s-1.52-.42-2.41-.26s-1.68.63-1.89.31s.73-1.42.94-1.78s.73-1 .05-1.42s-1.42.73-1.84 1.26s-1.15 1.42-1.15 1.42s.16.79.16 1.26s-.79 1.1-1.47 1.73s-1.26 1.52-2.1 1.47s-1.21-1.26-1.26-1.42s0-1-.26-1.05s-.84 1.1-1.84.94s-1.15-1.36-.58-2.52s1.68-1.47 2.52-1.89s1.57-.68 2.05-1.05s.63-.68.94-1.05s2.83-2.2 4.35-2.89s2.52-1.15 3.25-1.26c.73-.1 1.63-.16 2.31.31c.68.47 2.52 1.57 2.99 2.05s.84.89 1.84.68s3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.43.22-1.92-.31z" fill="#7add8a"></path><radialGradient id="IconifyId17ecdb2904d178eab8951" cx="64.332" cy="57.234" r="21.385" gradientTransform="matrix(.3201 -.9474 3.2189 1.0875 -140.493 55.94)" gradientUnits="userSpaceOnUse"><stop offset=".118" stop-color="#e3dda6"></stop><stop offset=".907" stop-color="#e3dda6" stop-opacity=".083"></stop><stop offset=".978" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M41.23 82.05c.1-.79-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-2-2.38-3.25-2.52c-2.91-.33-6.18-3.87-6.25-8.92c-.07-5.05 2.54-7.7 4.2-8.08c.99-.23 3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.42.22-1.92-.31c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c0 0-9.24 6.9-18.84 5.68c-10.11-1.31-20.61-10.75-20.55-11.15z" fill="url(#IconifyId17ecdb2904d178eab8951)"></path><radialGradient id="IconifyId17ecdb2904d178eab8952" cx="87.948" cy="42.632" r="18.619" gradientTransform="matrix(-.7604 -.6495 1.1303 -1.3232 106.636 156.165)" gradientUnits="userSpaceOnUse"><stop offset=".118" stop-color="#e3dda6"></stop><stop offset=".907" stop-color="#e3dda6" stop-opacity=".083"></stop><stop offset=".978" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M41.23 82.05c.1-.79-.21-2.1-1.42-2.52c-1.21-.42-2.15.1-2.83-.26s-1.57-2.26-3.1-2.36s-3.46 1.99-5.14 1.94c-1.68-.05-1.73-1.21-2.94-1.57s-1.63.89-2.62.68c-1-.21-2.41-1.63-3.2-2.89s-1.73-1.99-2.2-2.73s-.63-1.26-.63-1.26s-1.68-.05-2.15-2.68s-.1-3.88.31-5.25c.42-1.36 1.57-5.04 1.68-6.3s-.16-2.15.1-2.83s1.57-1.73 2.15-2.73c.58-1 1.1-2.05 1.63-2.78s1.47-.1 2.73-1.73s1.05-1.89 1.05-1.89s.31-1.73 1.26-2.89s1.94-1.73 2.62-1.84s1.63.21 2.31.21s1.52.16 2.1.05s2.31-1.47 3.57-1.78s2.36-.16 3.36-.37s2.73-.42 3.83.37s1.1 1.36 1 1.73s-.79 1.26-.52 1.63s1.1.68 1.57.84s1.21.21 1.47.37s.89.89 1.94 1.42s2.73 1.42 3.31 1.1s.52-1.73 1.52-2.05c1-.31 2.41.05 3.94.31s7.82 1.73 8.5 1.52s.47-.79 1.26-1s1.57-.16 1.89-.73s.52-3.36.47-4.3s-.05-2.1-.47-2.31s-1.57 1.05-2.62 1.26s-1.42-.16-1.89-.1s-.89.79-1.52.58c-.63-.21-1.78-.84-2.41-1.47c-.63-.63-1-1.73-.68-2.47s1.63-1.15 2.68-1.57c1.05-.42 2.26-.52 2.83-.73s.84-.47 1.57-.47s.94.63 1.36.73s3.2.05 3.67-.05s2.52-1.05 2.47-1.78s-1.52-.1-1.94-.52s-2-2.38-3.25-2.52c-2.91-.33-6.18-3.87-6.25-8.92c-.07-5.05 2.54-7.7 4.2-8.08c.99-.23 3.67-1.21 3.99-1.52s-.31-1.15-.63-1.21s-1.42.22-1.92-.31c-.38-.41-.11-.91.53-1.23c.63-.32 2.19-1.39 2.19-1.39s12.49-.18 27.03 10.15C113 25.52 117.63 38.2 117.63 38.2s.41 1.6.12 2.13c-.29.54.04 3.32-.78 7.96c-.82 4.64-1.18 6.06-1.13 8.16s.79 6.14-.79 6.45s-1.99-2.15-2.83-3.99s-2.31-4.14-2.68-4.93s-.63-1.84-.63-1.84s-.94.26-1.68-.21c-.73-.47-4.46-4.77-4.93-5.14s-1.68-.16-2.68.16s-1.36.94-3.62.73s-1.42-1.05-2.62-1.89s-2.26 1.1-3.41 1.1c-1.15 0-1.89-.58-2.68-1.36s-1.73-1.68-2.2-1.84s-1.63.16-1.15 1.31s1.36 1.26 2.15 2.05s.68 1.26 1.1 1.89s2.52 2.05 2.99 1.94c.47-.1 1.36-.63 1.73-1.21s.26-1.21.94-1.31s1.26.89 2.2 1.63s1.99.73 2.26 2.05c.26 1.31-.79 5.35-1.73 6.4s-1.89 1.15-1.89 1.15l-2.1 1.78s0 .94-1.73 1.94s-2.15.94-3.31 1.52s-1.78 1.26-2.68 1.05s-1.52-1.57-1.94-2.94c-.42-1.36-1.36-2.52-2.05-3.2s-1.21-.73-1.89-1.57s-2.1-2.68-2.2-3.04s-.1-.84-.47-1.36s-1.1-.89-1.52-1.21c-.42-.31-.73-.73-.84-1.42s-1.15-1.52-1.68-2.15s-1.15-1.78-1.73-1.36s.1 1.31.79 2.47s1 1.94 1.15 2.73c.16.79-.05 1.31.52 1.68s1.21-.05 1.89 1.57s.42 3.15 1.15 3.78s.89.26 1.52 1.05s.52 1.94 1.26 2.47s2.94 1.47 3.78 2.78s.42 1.89 1.21 2.36s2.31.05 3.88-.47s3.73-2.2 4.62-1.94s.68 3.57-.21 6.09s-1.57 3.31-2.2 4.09s-1.52 2.41-3.36 3.99s-4.3 4.04-4.93 7.24c0 0-9.24 6.9-18.84 5.68c-10.11-1.31-20.61-10.75-20.55-11.15z" fill="url(#IconifyId17ecdb2904d178eab8952)"></path><radialGradient id="IconifyId17ecdb2904d178eab8953" cx="61.288" cy="118.76" r="17.892" gradientTransform="matrix(.2128 -.9771 1.9056 .4151 -178.069 129.348)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e3dda6"></stop><stop offset=".818" stop-color="#e3dda6" stop-opacity="0"></stop></radialGradient><path d="M59.38 116.57c-1.67-.52-2.73-1.63-3.2-2.15s-.94-1.1-1.68-1.52c-.73-.42-1.57-1.31-2.15-2.1s-2.15-2.89-3.67-4.56s-2.31-2.47-2.41-4.3s1.57-3.73 1.57-3.73s-.47-3.25-1.84-5.67s-3.2-2.83-4.3-5.3c0 0 9.75-.92 17.91.92s21.02 9.26 21.02 9.26c-.1 1.36.05 2.2-.68 2.94s-3.73 3.36-4.25 4.3s-.16 2.1-.52 3.41s-2.68 3.41-3.46 3.83s-.58 1.21-2.41 2.78s-2.42 2.07-3.2 2.2c-.62.11-4.98.24-6.73-.31z" fill="url(#IconifyId17ecdb2904d178eab8953)"></path><path d="M79.53 25.46c-.78-.08-2.09 1.49-2.13 2.2s.19 1.68.49 1.94s2.09 1.16 2.5 1.75s.6 2.61 1.38 3.58s1.72 1.98 3.77 1.94s1.75-1.11 1.75-1.57c0-.78-2.43-3.43-3.4-4.37c-.97-.93-2.61-1.68-2.91-2.39s.26-1.23.04-1.79c-.22-.55-.74-1.22-1.49-1.29z" fill="#4b9ced"></path><path d="M72.46 83.86c-.3-.39-1.65-.45-2.1-.16s-1.13 2.42-.94 2.78c.19.36 1.49.26 1.94.1s1.42-2.3 1.1-2.72z" fill="#4186f1"></path></svg></span>
-      <h1 data-i18n="h1">LinkedIn Learning Journey Map</h1>
+      <h1 data-i18n="h1">Global LinkedIn Learning Hub</h1>
     </div>
     <div class="hero-baseline">
       <div class="hero-left">
@@ -625,11 +641,18 @@
       </button>
         <div class="hero-badge"><span class="dot" aria-hidden="true"></span><span data-i18n="updatedEvery">數據每 1 小時更新</span>&ensp;·&ensp;<span id="lastUpdated">—</span></div>
       </div>
+      <div class="hero-actions">
+        <a class="cta-sop" id="ctaSop" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        <span data-i18n="sop">操作說明 SOP</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
       <a class="cta-ll" id="ctaLearning" href="#" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
         <span data-i18n="cta">前往 LinkedIn Learning</span>
         <span class="arrow" aria-hidden="true">→</span>
       </a>
+      </div>
     </div>
   </header>
 
@@ -727,26 +750,27 @@
    ════════════════════════════════════════════════════════════════ */
 var DASHBOARD_DATA = {
   updatedAt: null, // e.g. "2026-07-11T09:00:00+08:00";null = 頁面載入時間
-  learningUrl: "https://www.linkedin.com/learning/", // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
+  learningUrl: "https://www.linkedin.com/learning/",
+  sopUrl: "#", // SOP/操作說明連結;填入網址即生效,留空字串則隱藏按鈕("#" = demo 佔位,點了不跳頁) // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
   kpis: [
     { key: "activation", tone: "green", status: "good", tag: "Global Success Metric #1",
       label: "帳號啟動率", labelEn: "Account Activation Rate", labelEs: "Tasa de Activación de Cuentas",
       sub: "已啟用帳號 / License數", subEn: "Activated accounts / Licenses", subEs: "Cuentas activadas / Licencias",
       value: 78, target: 90, unit: "%",
       note: "🎯 目標達成率 86.7%", noteEn: "🎯 86.7% of target", noteEs: "🎯 86.7% del objetivo",
-      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
+      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS/MUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
     { key: "mau", tone: "amber", status: "good", tag: "Global Success Metric #2",
       label: "每月活躍使用率", labelEn: "Monthly Active Rate", labelEs: "Tasa de Uso Activo Mensual",
       sub: "當月登入人數 / 已啟用帳號", subEn: "Monthly logins / Activated accounts", subEs: "Inicios de sesión del mes / Cuentas activadas",
       value: 62, target: 50, unit: "%",
       note: "🚀 超標 12%", noteEn: "🚀 +12% over target", noteEs: "🚀 +12% sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
+      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS/MUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
     { key: "avghours", tone: "blue", status: "good", tag: "Global Success Metric #3",
       label: "平均學習時數", labelEn: "Avg. Learning Time", labelEs: "Tiempo Medio de Aprendizaje",
       sub: "總學習時數 / 已啟用帳號", subEn: "Total hours / Activated accounts", subEs: "Horas totales / Cuentas activadas",
       value: 31.4, target: 30, unit: " min",
       note: "⏱️ 達標 +1.4 分鐘", noteEn: "⏱️ +1.4 min over target", noteEs: "⏱️ +1.4 min sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
+      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS/MUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
   ],
   compliance: {
     tag: "Global Success Metric #4",
@@ -758,7 +782,7 @@ var DASHBOARD_DATA = {
       { id: "WYHQ", rate: 95, status: "good" },
       { id: "WYTN", rate: 93, status: "good" },
       { id: "WYMY", rate: 88, status: "warn" },
-      { id: "WYUS", rate: 92, status: "good" },
+      { id: "WYUS/MUS", rate: 92, status: "good" },
       { id: "WYMX", rate: 84, status: "bad" }
     ]
   },
@@ -859,7 +883,7 @@ var DASHBOARD_DATA = {
       }
     },
     {
-      id: "WYUS", name: "WYUS", city: "美國 · 華盛頓州", cityEn: "USA · Washington", cityEs: "EE. UU. · Washington",
+      id: "WYUS", name: "WYUS/MUS", city: "美國 · 艾爾帕索", cityEn: "USA · El Paso", cityEs: "EE. UU. · El Paso",
       address: "2018 156th Ave NE, Suite V, Bellevue, WA 98007, United States", tel: "",
       lon: -122.137, lat: 47.627,
       participants: 356, activationRate: 66, courses: 715,
@@ -923,13 +947,13 @@ var DASHBOARD_DATA = {
   topLearners: [
     { name: "陳雅婷", site: "WYHQ", hours: 42.5 },
     { name: "Nurul Aisyah", site: "WYMY", hours: 39 },
-    { name: "Emily Chen", site: "WYUS", hours: 37.5 },
+    { name: "Emily Chen", site: "WYUS/MUS", hours: 37.5 },
     { name: "林建宏", site: "WYTN", hours: 35 },
     { name: "María González", site: "WYMX", hours: 33.5 },
     { name: "王志明", site: "WYHQ", hours: 31 },
     { name: "Ahmad Faizal", site: "WYMY", hours: 29.5 },
     { name: "黃淑芬", site: "WYTN", hours: 27 },
-    { name: "David Park", site: "WYUS", hours: 26.5 },
+    { name: "David Park", site: "WYUS/MUS", hours: 26.5 },
     { name: "Carlos Ramírez", site: "WYMX", hours: 25 }
   ],
   /* 活動推播牆:一張 = 一個活動 EDM;可放多筆。tone: party/challenge/leader */
@@ -960,9 +984,9 @@ var DASHBOARD_DATA = {
 var I18N = {
   zh: {
     overline: "LinkedIn Learning 全球 Launch",
-    h1: "LinkedIn Learning Journey Map",
+    h1: "Global LinkedIn Learning Hub",
     sub: "一起學習、一起點亮世界 — Your Growth Journey Starts Here.",
-    cta: "前往 LinkedIn Learning",
+    cta: "前往 LinkedIn Learning", sop: "操作說明 SOP",
     updatedEvery: "數據每 1 小時更新",
     updatedPrefix: "最後更新 ",
     tileParticipants: "全球參與人數",
@@ -1004,9 +1028,9 @@ var I18N = {
   },
   en: {
     overline: "LinkedIn Learning Global Launch",
-    h1: "LinkedIn Learning Journey Map",
+    h1: "Global LinkedIn Learning Hub",
     sub: "Learn together, light up the world — Your Growth Journey Starts Here.",
-    cta: "Go to LinkedIn Learning",
+    cta: "Go to LinkedIn Learning", sop: "How-to guide (SOP)",
     updatedEvery: "Updated hourly",
     updatedPrefix: "Updated ",
     tileParticipants: "Total Participants",
@@ -1048,9 +1072,9 @@ var I18N = {
   },
   es: {
     overline: "Lanzamiento Global de LinkedIn Learning",
-    h1: "LinkedIn Learning Journey Map",
+    h1: "Global LinkedIn Learning Hub",
     sub: "Aprendamos juntos, iluminemos el mundo — Your Growth Journey Starts Here.",
-    cta: "Ir a LinkedIn Learning",
+    cta: "Ir a LinkedIn Learning", sop: "Guía de uso (SOP)",
     updatedEvery: "Actualizado cada hora",
     updatedPrefix: "Actualizado ",
     tileParticipants: "Participantes totales",
@@ -1165,18 +1189,15 @@ function buildCardHTML(s) {
     '<div class="s-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
     '<b data-site-count="' + esc(s.id) + '">0</b><span>' + T("cardParticipants") + '</span></div>' +
     '<div class="meter"><i data-site-meter="' + esc(s.id) + '"></i></div>' +
-    '<div class="s-rate">' + T("cardActivation") + " " + rate + "%</div>" +
-    '<div class="s-hint" aria-hidden="true">' + T("cardHint") + '</div>'
+    '<div class="s-rate">' + T("cardActivation") + " " + rate + "%</div>"
   );
 }
 
 /* 讓卡片可點擊/可鍵盤操作(SVG 卡與窄螢幕列表卡共用) */
 function decorateCard(div, s) {
+  /* 活動花絮功能已停用:卡片改為純資訊顯示(要恢復請加回 role/tabindex/data-site-id
+     與下方「點擊/鍵盤開啟」事件、深連結,並在 buildCardHTML 加回 s-hint) */
   div.className = "scard";
-  div.setAttribute("role", "button");
-  div.setAttribute("tabindex", "0");
-  div.setAttribute("aria-label", T("seeHighlights") + s.name + T("highlightsOf"));
-  div.setAttribute("data-site-id", s.id);
 }
 
 /* 資訊卡邊緣的引導線起點(依 anchor:tl/tr/bl/br) */
@@ -1552,6 +1573,13 @@ function renderDashboard(data) {
     else { ctaLL.style.display = "none"; }
   }
 
+  /* 頁首「操作說明 SOP」按鈕:網址取自 DASHBOARD_DATA.sopUrl, 留空則隱藏 */
+  const ctaSop = document.getElementById("ctaSop");
+  if (ctaSop) {
+    if (DASHBOARD_DATA.sopUrl) { ctaSop.style.display = ""; ctaSop.setAttribute("href", DASHBOARD_DATA.sopUrl); }
+    else { ctaSop.style.display = "none"; }
+  }
+
   /* 資料重整時同步已開啟的彈窗;該據點已不存在則關閉 */
   const evM = document.getElementById("eventModal");
   if (evM && !evM.hidden) {
@@ -1762,13 +1790,6 @@ function closeEvent() {
   if (target && target.focus) target.focus();
 }
 
-/* 點擊/鍵盤開啟(事件委派,重新渲染後依然有效) */
-document.addEventListener("click", function (e) {
-  if (!e.target.closest) return;
-  const t = e.target.closest("[data-site-id]");
-  if (t && !evModal.contains(t)) openEvent(t.getAttribute("data-site-id"));
-});
-
 /* KPI 各據點分項:收合/展開(三張卡同步,狀態存 localStorage) */
 document.addEventListener("click", function (e) {
   const btn = e.target.closest && e.target.closest(".kpi-sites-toggle");
@@ -1778,13 +1799,6 @@ document.addEventListener("click", function (e) {
   for (const l of document.querySelectorAll(".kpi-sites-list")) l.hidden = !kpiSitesOpen;
   for (const b of document.querySelectorAll(".kpi-sites-toggle")) b.setAttribute("aria-expanded", kpiSitesOpen ? "true" : "false");
 });
-document.addEventListener("keydown", function (e) {
-  if ((e.key === "Enter" || e.key === " ") && !e.repeat && e.target.closest) {
-    const t = e.target.closest('.scard[data-site-id]');
-    if (t) { e.preventDefault(); openEvent(t.getAttribute("data-site-id")); }
-  }
-});
-
 document.getElementById("evClose").addEventListener("click", closeEvent);
 /* 只在 mousedown 也落在遮罩上才關閉:在窗內拖曳選字、放開在遮罩上不誤關 */
 let backdropPressed = false;
@@ -1856,8 +1870,10 @@ renderDashboard();
 
 /* demo: learningUrl 若為 "#"(哨兵)則不跳頁; IT 設定真實網址後正常於新分頁開啟 */
 (function () {
-  const ll = document.getElementById("ctaLearning");
-  if (ll) ll.addEventListener("click", function (e) { if (this.getAttribute("href") === "#") e.preventDefault(); });
+  for (const id of ["ctaLearning", "ctaSop"]) {
+    const a = document.getElementById(id);
+    if (a) a.addEventListener("click", function (e) { if (this.getAttribute("href") === "#") e.preventDefault(); });
+  }
 })();
 
 /* ── 深/淺色主題切換 ──────────────────────────────────
@@ -1899,11 +1915,6 @@ renderDashboard();
   }
 })();
 
-/* 深連結:網址帶 #site=據點ID 直接開啟該據點花絮(方便在 Teams 分享) */
-(function () {
-  const m = /^#site=(.+)$/.exec(decodeURIComponent(location.hash || ""));
-  if (m) openEvent(m[1]);
-})();
 
 /* ── 語言切換(繁中 / English):套用靜態文案 + 重繪動態文字,選擇存 localStorage ── */
 function applyI18n() {
