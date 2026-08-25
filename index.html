@@ -326,8 +326,13 @@
   .bdeco::before { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: rgba(255, 255, 255, 0.09); top: -130px; right: -70px; }
   .bdeco::after { content: ""; position: absolute; width: 240px; height: 240px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); bottom: -110px; left: 26%; }
   .bdeco-img { background-size: cover; background-position: center; }
+  /* bare:EDM 完整呈現(不裁切、不套暗色遮罩) */
+  .bslide.bare .bdeco-img { background-size: contain; background-repeat: no-repeat; background-position: center; }
+  .bslide.bare .bdeco-img::after { background: linear-gradient(to top, rgba(8, 16, 34, 0.32) 0%, rgba(8, 16, 34, 0.16) 55%, rgba(8, 16, 34, 0.24) 100%); }
+  .bare-link { position: absolute; inset: 0; display: block; z-index: 1; cursor: pointer; }
+  .bare-link:focus-visible { outline: 3px solid var(--glow); outline-offset: -3px; }
   .bdeco-img::before { content: none; }
-  .bdeco-img::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background: linear-gradient(to top, rgba(8, 16, 34, 0.62) 0%, rgba(8, 16, 34, 0) 46%), linear-gradient(90deg, rgba(8, 16, 34, 0.92) 0%, rgba(8, 16, 34, 0.6) 60%, rgba(8, 16, 34, 0.42) 100%); }
+  .bdeco-img::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background: linear-gradient(to top, rgba(8, 16, 34, 0.45) 0%, rgba(8, 16, 34, 0) 46%), linear-gradient(90deg, rgba(8, 16, 34, 0.70) 0%, rgba(8, 16, 34, 0.40) 60%, rgba(8, 16, 34, 0.22) 100%); }
   .bslide-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; height: 100%; min-height: 278px; justify-content: space-between; }
   .bhead-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .bhead { min-width: 0; }
@@ -750,27 +755,27 @@
    ════════════════════════════════════════════════════════════════ */
 var DASHBOARD_DATA = {
   updatedAt: null, // e.g. "2026-07-11T09:00:00+08:00";null = 頁面載入時間
-  learningUrl: "https://www.linkedin.com/learning/",
-  sopUrl: "#", // SOP/操作說明連結;填入網址即生效,留空字串則隱藏按鈕("#" = demo 佔位,點了不跳頁) // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
+  learningUrl: "https://www.linkedin.com/learning/?u=514123418",
+  sopUrl: "Account_Activation_SOP.pdf", // SOP/操作說明連結;可放相對路徑檔案或外部網址,留空字串則隱藏按鈕 // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
   kpis: [
     { key: "activation", tone: "green", status: "good", tag: "Global Success Metric #1",
       label: "帳號啟動率", labelEn: "Account Activation Rate", labelEs: "Tasa de Activación de Cuentas",
       sub: "已啟用帳號 / License數", subEn: "Activated accounts / Licenses", subEs: "Cuentas activadas / Licencias",
       value: 78, target: 90, unit: "%",
       note: "🎯 目標達成率 86.7%", noteEn: "🎯 86.7% of target", noteEs: "🎯 86.7% del objetivo",
-      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS/MUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
+      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYMTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS/MUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
     { key: "mau", tone: "amber", status: "good", tag: "Global Success Metric #2",
       label: "每月活躍使用率", labelEn: "Monthly Active Rate", labelEs: "Tasa de Uso Activo Mensual",
       sub: "當月登入人數 / 已啟用帳號", subEn: "Monthly logins / Activated accounts", subEs: "Inicios de sesión del mes / Cuentas activadas",
       value: 62, target: 50, unit: "%",
       note: "🚀 超標 12%", noteEn: "🚀 +12% over target", noteEs: "🚀 +12% sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS/MUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
+      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYMTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS/MUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
     { key: "avghours", tone: "blue", status: "good", tag: "Global Success Metric #3",
       label: "平均學習時數", labelEn: "Avg. Learning Time", labelEs: "Tiempo Medio de Aprendizaje",
       sub: "總學習時數 / 已啟用帳號", subEn: "Total hours / Activated accounts", subEs: "Horas totales / Cuentas activadas",
       value: 31.4, target: 30, unit: " min",
       note: "⏱️ 達標 +1.4 分鐘", noteEn: "⏱️ +1.4 min over target", noteEs: "⏱️ +1.4 min sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS/MUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
+      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYMTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS/MUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
   ],
   compliance: {
     tag: "Global Success Metric #4",
@@ -780,7 +785,7 @@ var DASHBOARD_DATA = {
     gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo",
     sites: [
       { id: "WYHQ", rate: 95, status: "good" },
-      { id: "WYTN", rate: 93, status: "good" },
+      { id: "WYMTN", rate: 93, status: "good" },
       { id: "WYMY", rate: 88, status: "warn" },
       { id: "WYUS/MUS", rate: 92, status: "good" },
       { id: "WYMX", rate: 84, status: "bad" }
@@ -823,7 +828,7 @@ var DASHBOARD_DATA = {
       }
     },
     {
-      id: "WYTN", name: "WYTN", city: "台灣 · 台南安定", cityEn: "Taiwan · Tainan", cityEs: "Taiwán · Tainan",
+      id: "WYTN", name: "WYMTN", city: "台灣 · 台南安定", cityEn: "Taiwan · Tainan", cityEs: "Taiwán · Tainan",
       address: "台南市安定區北園三路8號4樓", tel: "+886-6-6013588",
       lon: 120.237, lat: 23.121,
       participants: 422, activationRate: 74, courses: 861,
@@ -948,16 +953,20 @@ var DASHBOARD_DATA = {
     { name: "陳雅婷", site: "WYHQ", hours: 42.5 },
     { name: "Nurul Aisyah", site: "WYMY", hours: 39 },
     { name: "Emily Chen", site: "WYUS/MUS", hours: 37.5 },
-    { name: "林建宏", site: "WYTN", hours: 35 },
+    { name: "林建宏", site: "WYMTN", hours: 35 },
     { name: "María González", site: "WYMX", hours: 33.5 },
     { name: "王志明", site: "WYHQ", hours: 31 },
     { name: "Ahmad Faizal", site: "WYMY", hours: 29.5 },
-    { name: "黃淑芬", site: "WYTN", hours: 27 },
+    { name: "黃淑芬", site: "WYMTN", hours: 27 },
     { name: "David Park", site: "WYUS/MUS", hours: 26.5 },
     { name: "Carlos Ramírez", site: "WYMX", hours: 25 }
   ],
   /* 活動推播牆:一張 = 一個活動 EDM;可放多筆。tone: party/challenge/leader */
   broadcasts: [
+    /* bare: true = 整張 EDM 滿版顯示,不疊標題/文案/CTA(圖上已有完整資訊) */
+    { tone: "leader", bare: true, image: "photos/top10-leaderboard-edm.jpg",
+      link: "https://www.linkedin.com/learning/?u=514123418",
+      title: "Top 10 Learner 排行榜挑戰", titleEn: "Top 10 Learner Leaderboard Challenge", titleEs: "Reto del Top 10 de Aprendices" },
     { tone: "challenge", image: "photos/ai-literacy-journey-full.jpg", tag: "全球 · 學習旅程",
       title: "AI Literacy Journey", titleEn: "AI Literacy Journey", titleEs: "AI Literacy Journey",
       sub: "🎯 完成 3 門 AI 課程，挑戰 AI 新技能！", subEn: "🎯 Complete 3 AI courses and take on new AI skills!", subEs: "🎯 ¡Completa 3 cursos de IA y domina nuevas habilidades de IA!",
@@ -1466,6 +1475,15 @@ function renderBroadcasts() {
     const bg = b.image
       ? '<div class="bdeco bdeco-img" style="background-image:url(&#39;' + esc(b.image) + '&#39;)"></div>'
       : '<div class="bdeco"></div>';
+    if (b.bare) {
+      const bareLink = b.link || DASHBOARD_DATA.learningUrl || "";
+      const bareInner = bareLink
+        ? '<a class="bare-link" href="' + esc(bareLink) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(L(b, "title")) + '">' + bg + "</a>"
+        : bg;
+      slidesH += '<div class="bslide bare tone-' + esc(b.tone || "party") + (b.image ? " has-img" : "") + (i === 0 ? " on" : "") + '">' + bareInner + "</div>";
+      dotsH += '<button type="button" aria-label="' + esc(L(b, "title")) + '"' + (i === 0 ? ' class="on" aria-current="true"' : "") + "></button>";
+      continue;
+    }
     slidesH += '<div class="bslide tone-' + esc(b.tone || "party") + (b.image ? " has-img" : "") + (i === 0 ? " on" : "") + '">' +
       bg +
       '<div class="bslide-inner">' +
