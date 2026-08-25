@@ -326,7 +326,8 @@
   .bdeco::before { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: rgba(255, 255, 255, 0.09); top: -130px; right: -70px; }
   .bdeco::after { content: ""; position: absolute; width: 240px; height: 240px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); bottom: -110px; left: 26%; }
   .bdeco-img { background-size: cover; background-position: center; }
-  /* bare:EDM 完整呈現(不裁切、不套暗色遮罩) */
+  /* bare:EDM 完整呈現(不裁切、淡遮罩) */
+  .bslide.bare { background: #06080f; } /* 滿版 EDM 兩側留白用黑色,不用 tone 漸層 */
   .bslide.bare .bdeco-img { background-size: contain; background-repeat: no-repeat; background-position: center; }
   .bslide.bare .bdeco-img::after { background: linear-gradient(to top, rgba(8, 16, 34, 0.32) 0%, rgba(8, 16, 34, 0.16) 55%, rgba(8, 16, 34, 0.24) 100%); }
   .bare-link { position: absolute; inset: 0; display: block; z-index: 1; cursor: pointer; }
