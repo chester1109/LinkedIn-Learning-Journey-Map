@@ -764,32 +764,32 @@ var DASHBOARD_DATA = {
       sub: "已啟用帳號 / License數", subEn: "Activated accounts / Licenses", subEs: "Cuentas activadas / Licencias",
       value: 78, target: 90, unit: "%",
       note: "🎯 目標達成率 86.7%", noteEn: "🎯 86.7% of target", noteEs: "🎯 86.7% del objetivo",
-      sites: [ { id: "WYHQ", val: 86, status: "good" }, { id: "WYMTN", val: 82, status: "good" }, { id: "WYMY", val: 74, status: "warn" }, { id: "WYUS/MUS", val: 80, status: "good" }, { id: "WYMX", val: 68, status: "bad" } ] },
+      sites: [ { id: "WYHQ", val: 93 }, { id: "WYMTN", val: 90 }, { id: "WYMY", val: 70 }, { id: "WYUS/MUS", val: 75 }, { id: "WYMX", val: 62 } ] },
     { key: "mau", tone: "amber", status: "good", tag: "Global Success Metric #2",
       label: "每月活躍使用率", labelEn: "Monthly Active Rate", labelEs: "Tasa de Uso Activo Mensual",
       sub: "當月登入人數 / 已啟用帳號", subEn: "Monthly logins / Activated accounts", subEs: "Inicios de sesión del mes / Cuentas activadas",
       value: 62, target: 50, unit: "%",
       note: "🚀 超標 12%", noteEn: "🚀 +12% over target", noteEs: "🚀 +12% sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 70, status: "good" }, { id: "WYMTN", val: 66, status: "good" }, { id: "WYMY", val: 54, status: "warn" }, { id: "WYUS/MUS", val: 64, status: "good" }, { id: "WYMX", val: 56, status: "warn" } ] },
+      sites: [ { id: "WYHQ", val: 70 }, { id: "WYMTN", val: 66 }, { id: "WYMY", val: 48 }, { id: "WYUS/MUS", val: 72 }, { id: "WYMX", val: 54 } ] },
     { key: "avghours", tone: "blue", status: "good", tag: "Global Success Metric #3",
       label: "平均學習時數", labelEn: "Avg. Learning Time", labelEs: "Tiempo Medio de Aprendizaje",
       sub: "總學習時數 / 已啟用帳號", subEn: "Total hours / Activated accounts", subEs: "Horas totales / Cuentas activadas",
       value: 31.4, target: 30, unit: " min",
       note: "⏱️ 達標 +1.4 分鐘", noteEn: "⏱️ +1.4 min over target", noteEs: "⏱️ +1.4 min sobre el objetivo",
-      sites: [ { id: "WYHQ", val: 35, status: "good" }, { id: "WYMTN", val: 34, status: "good" }, { id: "WYMY", val: 29, status: "warn" }, { id: "WYUS/MUS", val: 35, status: "good" }, { id: "WYMX", val: 24, status: "bad" } ] }
+      sites: [ { id: "WYHQ", val: 36 }, { id: "WYMTN", val: 33 }, { id: "WYMY", val: 27 }, { id: "WYUS/MUS", val: 32 }, { id: "WYMX", val: 29 } ] }
   ],
   compliance: {
     tag: "Global Success Metric #4",
-    label: "AI 必修完訓率", labelEn: "AI Mandatory Training Completion", labelEs: "Finalización de Formación Obligatoria de IA",
+    label: "AI Learning Path (All Courses)", labelEn: "AI Learning Path (All Courses)", labelEs: "AI Learning Path (All Courses)",
     value: 91, target: 100, unit: "%",
     note: "剩餘 287 人未完成", noteEn: "287 people still to complete", noteEs: "287 personas por completar",
     gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo",
     sites: [
-      { id: "WYHQ", rate: 95, status: "good" },
-      { id: "WYMTN", rate: 93, status: "good" },
-      { id: "WYMY", rate: 88, status: "warn" },
-      { id: "WYUS/MUS", rate: 92, status: "good" },
-      { id: "WYMX", rate: 84, status: "bad" }
+      { id: "WYHQ", rate: 100 },
+      { id: "WYMTN", rate: 100 },
+      { id: "WYMY", rate: 85 },
+      { id: "WYUS/MUS", rate: 95 },
+      { id: "WYMX", rate: 75 }
     ]
   },
   sites: [
@@ -997,8 +997,8 @@ var I18N = {
     h1: "Global LinkedIn Learning Hub",
     sub: "一起學習、一起點亮世界 — Your Growth Journey Starts Here.",
     cta: "前往 LinkedIn Learning", sop: "操作說明 SOP",
-    updatedEvery: "數據每 1 小時更新",
-    updatedPrefix: "最後更新 ",
+    updatedEvery: "每日 10:00 更新",
+    updatedPrefix: "資料截止 ",
     tileParticipants: "全球參與人數",
     tileCourses: "已完成課程數",
     tileTasks: "任務完成數",
@@ -1041,8 +1041,8 @@ var I18N = {
     h1: "Global LinkedIn Learning Hub",
     sub: "Learn together, light up the world — Your Growth Journey Starts Here.",
     cta: "Go to LinkedIn Learning", sop: "How-to guide (SOP)",
-    updatedEvery: "Updated hourly",
-    updatedPrefix: "Updated ",
+    updatedEvery: "Updated daily at 10:00",
+    updatedPrefix: "Data as of ",
     tileParticipants: "Total Participants",
     tileCourses: "Courses Completed",
     tileTasks: "Tasks Completed",
@@ -1085,8 +1085,8 @@ var I18N = {
     h1: "Global LinkedIn Learning Hub",
     sub: "Aprendamos juntos, iluminemos el mundo — Your Growth Journey Starts Here.",
     cta: "Ir a LinkedIn Learning", sop: "Guía de uso (SOP)",
-    updatedEvery: "Actualizado cada hora",
-    updatedPrefix: "Actualizado ",
+    updatedEvery: "Actualizado a diario a las 10:00",
+    updatedPrefix: "Datos al ",
     tileParticipants: "Participantes totales",
     tileCourses: "Cursos completados",
     tileTasks: "Tareas completadas",
@@ -1388,7 +1388,7 @@ function renderKpis() {
       '</div>' +
       '<div class="kpi-body"><span class="kpi-val">' + esc(bigTxt) + '</span><span class="kpi-target">/ ' + esc(tgtTxt) + '</span></div>' +
       (L(k, "note") ? '<div class="kpi-note note-' + (k.status || "good") + '">' + esc(L(k, "note")) + '</div>' : '') +
-      (k.sites && k.sites.length ? '<div class="kpi-sites"><button class="kpi-sites-toggle" type="button" aria-expanded="' + (kpiSitesOpen ? "true" : "false") + '"><span>' + esc(T("sitesToggle")) + '</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button><div class="kpi-sites-list"' + (kpiSitesOpen ? "" : " hidden") + '>' + k.sites.map(function (s) { var st = s.status || "good"; var mk = st === "good" ? "✓" : (st === "warn" ? "!" : "✕"); var sv = k.unit === "%" ? (s.val + "%") : (s.val + (k.unit || "")); return '<div class="kpi-site"><span class="cmark st-' + st + '" aria-hidden="true">' + mk + '</span><span class="code">' + esc(s.id) + '</span><span class="r st-' + st + '">' + esc(sv) + '</span></div>'; }).join("") + '</div></div>' : '');
+      (k.sites && k.sites.length ? '<div class="kpi-sites"><button class="kpi-sites-toggle" type="button" aria-expanded="' + (kpiSitesOpen ? "true" : "false") + '"><span>' + esc(T("sitesToggle")) + '</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button><div class="kpi-sites-list"' + (kpiSitesOpen ? "" : " hidden") + '>' + k.sites.map(function (s) { var st = (Number(s.val) >= Number(k.target)) ? "good" : "warn"; var mk = st === "good" ? "✓" : "!"; var sv = k.unit === "%" ? (s.val + "%") : (s.val + (k.unit || "")); return '<div class="kpi-site"><span class="cmark st-' + st + '" aria-hidden="true">' + mk + '</span><span class="code">' + esc(s.id) + '</span><span class="r st-' + st + '">' + esc(sv) + '</span></div>'; }).join("") + '</div></div>' : '');
     wrap.appendChild(card);
   }
 }
@@ -1402,8 +1402,8 @@ function renderCompliance() {
   const tgtTxt = String(c.target) + (c.unit || "");
   let sitesHtml = "";
   for (const s of (c.sites || [])) {
-    const st = s.status || "good";
-    const mark = st === "good" ? "✓" : (st === "warn" ? "!" : "✕");
+    const st = (Number(s.rate) >= Number(c.target)) ? "good" : "warn";
+    const mark = st === "good" ? "✓" : "!";
     sitesHtml +=
       '<div class="comp-site">' +
         '<div class="cs-top"><span class="cmark st-' + st + '" aria-hidden="true">' + mark + '</span>' +
@@ -1583,7 +1583,7 @@ function renderDashboard(data) {
 
   const when = DASHBOARD_DATA.updatedAt ? new Date(DASHBOARD_DATA.updatedAt) : new Date();
   document.getElementById("lastUpdated").textContent =
-    T("updatedPrefix") + when.toLocaleString(T("locale"), { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+    T("updatedPrefix") + when.toLocaleDateString(T("locale"), { year: "numeric", month: "2-digit", day: "2-digit" });
 
   /* 頁首「前往 LinkedIn Learning」按鈕:網址取自 DASHBOARD_DATA.learningUrl, 留空則隱藏 */
   const ctaLL = document.getElementById("ctaLearning");
@@ -1886,6 +1886,89 @@ document.addEventListener("keydown", function (e) {
 });
 
 renderDashboard();
+
+/* ══ 每日數據:data.json ═══════════════════════════════════════════
+   畫面文案、照片、i18n 都留在本檔;data.json 只帶「數字」,每天更新它即可。
+   讀不到 data.json(例如本機用 file:// 直接開啟)就沿用下方內嵌的測試資料。
+   結構範例:
+   {
+     "updatedAt": "2026-08-25T10:00:00+08:00",
+     "kpis": [{ "key": "activation", "value": 78, "target": 90,
+                "note": "🎯 目標達成率 86.7%",
+                "sites": [{ "id": "WYHQ", "val": 93 }, ...] }, ...],
+     "compliance": { "value": 91, "target": 100, "note": "剩餘 287 人未完成",
+                     "gap": "+9%", "sites": [{ "id": "WYHQ", "rate": 100 }, ...] },
+     "sites": [{ "id": "WYHQ", "participants": 872, "activationRate": 93, "courses": 1842 }, ...],
+     "topLearners": [{ "name": "陳雅婷", "site": "WYHQ", "hours": 42.5 }, ...]
+   }
+   ══════════════════════════════════════════════════════════════ */
+function isNum(v) { return typeof v === "number" && isFinite(v); }
+
+function applyDataPatch(p) {
+  if (!p || typeof p !== "object") return false;
+  let touched = false;
+
+  if (typeof p.updatedAt === "string" && p.updatedAt) { DASHBOARD_DATA.updatedAt = p.updatedAt; touched = true; }
+
+  /* KPI:依 key 對應,只覆寫數字與註記 */
+  if (Array.isArray(p.kpis)) {
+    for (const src of p.kpis) {
+      const dst = (DASHBOARD_DATA.kpis || []).find(function (k) { return k.key === src.key; });
+      if (!dst) continue;
+      if (isNum(src.value)) dst.value = src.value;
+      if (isNum(src.target)) dst.target = src.target;
+      if (typeof src.note === "string") { dst.note = src.note; dst.noteEn = src.noteEn || src.note; dst.noteEs = src.noteEs || src.note; }
+      if (Array.isArray(src.sites)) {
+        const rows = src.sites.filter(function (s) { return s && s.id != null && isNum(s.val); });
+        if (rows.length) dst.sites = rows.map(function (s) { return { id: String(s.id), val: s.val }; });
+      }
+      touched = true;
+    }
+  }
+
+  /* 合規卡 */
+  if (p.compliance && DASHBOARD_DATA.compliance) {
+    const c = p.compliance, dst = DASHBOARD_DATA.compliance;
+    if (isNum(c.value)) dst.value = c.value;
+    if (isNum(c.target)) dst.target = c.target;
+    if (typeof c.note === "string") { dst.note = c.note; dst.noteEn = c.noteEn || c.note; dst.noteEs = c.noteEs || c.note; }
+    if (typeof c.gap === "string") dst.gap = c.gap;
+    if (Array.isArray(c.sites)) {
+      const rows = c.sites.filter(function (s) { return s && s.id != null && isNum(s.rate); });
+      if (rows.length) dst.sites = rows.map(function (s) { return { id: String(s.id), rate: s.rate }; });
+    }
+    touched = true;
+  }
+
+  /* 據點卡片上的人數/啟動率/課程數(依 id 對應,不動名稱與活動內容) */
+  if (Array.isArray(p.sites)) {
+    for (const src of p.sites) {
+      const dst = (DASHBOARD_DATA.sites || []).find(function (s) { return s.id === src.id; });
+      if (!dst) continue;
+      if (isNum(src.participants)) dst.participants = src.participants;
+      if (isNum(src.activationRate)) dst.activationRate = src.activationRate;
+      if (isNum(src.courses)) dst.courses = src.courses;
+      touched = true;
+    }
+  }
+
+  /* Top 10 排行榜 */
+  if (Array.isArray(p.topLearners)) {
+    const rows = p.topLearners.filter(function (t) { return t && t.name && isNum(t.hours); });
+    if (rows.length) { DASHBOARD_DATA.topLearners = rows; touched = true; }
+  }
+
+  return touched;
+}
+
+(function () {
+  /* file:// 直接開啟時 fetch 會被瀏覽器擋掉,直接用內嵌資料 */
+  if (!window.fetch || location.protocol === "file:") return;
+  fetch("data.json", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) { if (applyDataPatch(j)) renderDashboard(); })
+    .catch(function () { /* 沒有 data.json 就沿用內嵌資料 */ });
+})();
 
 /* demo: learningUrl 若為 "#"(哨兵)則不跳頁; IT 設定真實網址後正常於新分頁開啟 */
 (function () {

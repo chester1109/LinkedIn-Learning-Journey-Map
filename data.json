@@ -1,0 +1,174 @@
+{
+  "updatedAt": "2026-08-26T10:00:00+08:00",
+  "kpis": [
+    {
+      "key": "activation",
+      "value": 1.0,
+      "target": 90,
+      "note": "🎯 目標達成率 1.1%",
+      "noteEn": "🎯 1.1% of target",
+      "noteEs": "🎯 1.1% del objetivo",
+      "sites": [
+        {
+          "id": "WYHQ",
+          "val": 1.8
+        },
+        {
+          "id": "WYMTN",
+          "val": 0.3
+        },
+        {
+          "id": "WYMY",
+          "val": 0.4
+        },
+        {
+          "id": "WYUS/MUS",
+          "val": 2.3
+        },
+        {
+          "id": "WYMX",
+          "val": 0.1
+        }
+      ]
+    },
+    {
+      "key": "mau",
+      "value": 73.3,
+      "target": 50,
+      "note": "🚀 超標 23.3%",
+      "noteEn": "🚀 +23.3% over target",
+      "noteEs": "🚀 +23.3% sobre el objetivo",
+      "sites": [
+        {
+          "id": "WYHQ",
+          "val": 79.4
+        },
+        {
+          "id": "WYMTN",
+          "val": 33.3
+        },
+        {
+          "id": "WYMY",
+          "val": 100.0
+        },
+        {
+          "id": "WYUS/MUS",
+          "val": 50.0
+        },
+        {
+          "id": "WYMX",
+          "val": 0.0
+        }
+      ]
+    },
+    {
+      "key": "avghours",
+      "value": 7.0,
+      "target": 30,
+      "note": "⏱️ 距目標 23.0 分鐘",
+      "noteEn": "⏱️ 23.0 min to target",
+      "noteEs": "⏱️ 23.0 min hasta el objetivo",
+      "sites": [
+        {
+          "id": "WYHQ",
+          "val": 6.3
+        },
+        {
+          "id": "WYMTN",
+          "val": 0.0
+        },
+        {
+          "id": "WYMY",
+          "val": 29.3
+        },
+        {
+          "id": "WYUS/MUS",
+          "val": 2.9
+        },
+        {
+          "id": "WYMX",
+          "val": 0.0
+        }
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "id": "WYHQ",
+      "participants": 34,
+      "activationRate": 1.8
+    },
+    {
+      "id": "WYTN",
+      "participants": 3,
+      "activationRate": 0.3
+    },
+    {
+      "id": "WYMY",
+      "participants": 3,
+      "activationRate": 0.4
+    },
+    {
+      "id": "WYUS",
+      "participants": 4,
+      "activationRate": 2.3
+    },
+    {
+      "id": "WYMX",
+      "participants": 1,
+      "activationRate": 0.1
+    }
+  ],
+  "topLearners": [
+    {
+      "name": "Beatrice Hu",
+      "site": "WYHQ",
+      "hours": 3.2
+    },
+    {
+      "name": "Miranda PH Li",
+      "site": "WYHQ",
+      "hours": 2.6
+    },
+    {
+      "name": "Asher Chew",
+      "site": "WYMY",
+      "hours": 1.5
+    },
+    {
+      "name": "Victor PH Lai",
+      "site": "WYHQ",
+      "hours": 0.6
+    },
+    {
+      "name": "Iris CH Chen",
+      "site": "WYHQ",
+      "hours": 0.5
+    },
+    {
+      "name": "Eudoria Hsiao",
+      "site": "WYHQ",
+      "hours": 0.3
+    },
+    {
+      "name": "Mah-ann Gonzalez",
+      "site": "WYUS/MUS",
+      "hours": 0.2
+    },
+    {
+      "name": "Amy Yu",
+      "site": "WYHQ",
+      "hours": 0.1
+    },
+    {
+      "name": "Arnold Tsao",
+      "site": "WYHQ",
+      "hours": 0.1
+    },
+    {
+      "name": "Grace Lee",
+      "site": "WYMY",
+      "hours": 0.1
+    }
+  ]
+}
