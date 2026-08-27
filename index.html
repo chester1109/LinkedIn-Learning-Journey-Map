@@ -307,7 +307,7 @@
   .comp-site .cs-top { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; line-height: 1; }
   .comp-site .code { color: var(--ink-2); font-weight: 600; letter-spacing: 0.02em; }
   .comp-site .cmark { font-weight: 700; font-size: 13px; }
-  .comp-site .r { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .comp-site .r { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--ink); }
   .st-good { color: var(--good); }
   .st-warn { color: #b47800; }
   .st-bad { color: #c0392b; }
@@ -772,17 +772,17 @@ var DASHBOARD_DATA = {
       note: "🚀 超標 12%", noteEn: "🚀 +12% over target", noteEs: "🚀 +12% sobre el objetivo",
       sites: [ { id: "WYHQ", val: 70 }, { id: "WYMTN", val: 66 }, { id: "WYMY", val: 48 }, { id: "WYUS/MUS", val: 72 }, { id: "WYMX", val: 54 } ] },
     { key: "avghours", tone: "blue", status: "good", tag: "Global Success Metric #3",
-      label: "平均學習時數", labelEn: "Avg. Learning Time", labelEs: "Tiempo Medio de Aprendizaje",
-      sub: "總學習時數 / 已啟用帳號", subEn: "Total hours / Activated accounts", subEs: "Horas totales / Cuentas activadas",
+      label: "每月平均學習時數", labelEn: "Monthly Avg. Learning Time", labelEs: "Tiempo Medio Mensual de Aprendizaje",
+      sub: "當月總學習時數 / 已啟用帳號", subEn: "Monthly total hours / Activated accounts", subEs: "Horas totales del mes / Cuentas activadas",
       value: 31.4, target: 30, unit: " min",
       note: "⏱️ 達標 +1.4 分鐘", noteEn: "⏱️ +1.4 min over target", noteEs: "⏱️ +1.4 min sobre el objetivo",
       sites: [ { id: "WYHQ", val: 36 }, { id: "WYMTN", val: 33 }, { id: "WYMY", val: 27 }, { id: "WYUS/MUS", val: 32 }, { id: "WYMX", val: 29 } ] }
   ],
   compliance: {
     tag: "Global Success Metric #4",
-    label: "AI Learning Path (All Courses)", labelEn: "AI Learning Path (All Courses)", labelEs: "AI Learning Path (All Courses)",
+    label: "AI Learning Path Completion Rate (All Courses)", labelEn: "AI Learning Path Completion Rate (All Courses)", labelEs: "AI Learning Path Completion Rate (All Courses)",
     value: 91, target: 100, unit: "%",
-    note: "剩餘 287 人未完成", noteEn: "287 people still to complete", noteEs: "287 personas por completar",
+    note: "已完成 41 人", noteEn: "41 people completed", noteEs: "41 personas completaron",
     gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo",
     sites: [
       { id: "WYHQ", rate: 100 },
@@ -1399,16 +1399,13 @@ function renderCompliance() {
   if (!c) { box.style.display = "none"; return; }
   box.style.display = "";
   const bigTxt = c.value + (c.unit || "");
-  const tgtTxt = String(c.target) + (c.unit || "");
   let sitesHtml = "";
   for (const s of (c.sites || [])) {
-    const st = (Number(s.rate) >= Number(c.target)) ? "good" : "warn";
-    const mark = st === "good" ? "✓" : "!";
+    /* 只追蹤完成比率,不做達標判定(無 ✓/!) */
     sitesHtml +=
       '<div class="comp-site">' +
-        '<div class="cs-top"><span class="cmark st-' + st + '" aria-hidden="true">' + mark + '</span>' +
-        '<span class="code">' + esc(s.id) + '</span></div>' +
-        '<div class="r st-' + st + '">' + esc(String(s.rate)) + '%</div>' +
+        '<div class="cs-top"><span class="code">' + esc(s.id) + '</span></div>' +
+        '<div class="r">' + esc(String(s.rate)) + '%</div>' +
       '</div>';
   }
   box.innerHTML =
@@ -1418,11 +1415,10 @@ function renderCompliance() {
       '<span class="kpi-tag comp-metric">' + esc(c.tag || "Critical") + '</span>' +
     '</div>' +
     '<div class="comp-main">' +
-      '<div class="comp-figure"><span class="comp-val">' + esc(bigTxt) + '</span> <span class="kpi-target">/ ' + esc(tgtTxt) + '</span>' +
+      '<div class="comp-figure"><span class="comp-val">' + esc(bigTxt) + '</span>' +
         (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
       '</div>' +
-      '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value) / (Number(c.target) || 100) * 100) + '%"></i></div></div>' +
-      (c.gap ? '<div class="comp-gap"><span class="kpi-sub">' + esc(L(c, "gapLabel")) + '</span><span class="comp-gap-v">↗ ' + esc(c.gap) + '</span></div>' : '') +
+      '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value)) + '%"></i></div></div>' +
     '</div>' +
     '<div class="comp-sites">' + sitesHtml + '</div>';
 }
