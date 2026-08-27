@@ -1,13 +1,13 @@
 {
-  "updatedAt": "2026-08-26T10:00:00+08:00",
+  "updatedAt": "2026-08-27T10:00:00+08:00",
   "kpis": [
     {
       "key": "activation",
-      "value": 1.0,
+      "value": 1.1,
       "target": 90,
-      "note": "🎯 目標達成率 1.1%",
-      "noteEn": "🎯 1.1% of target",
-      "noteEs": "🎯 1.1% del objetivo",
+      "note": "🎯 目標達成率 1.2%",
+      "noteEn": "🎯 1.2% of target",
+      "noteEs": "🎯 1.2% del objetivo",
       "sites": [
         {
           "id": "WYHQ",
@@ -19,7 +19,7 @@
         },
         {
           "id": "WYMY",
-          "val": 0.4
+          "val": 0.6
         },
         {
           "id": "WYUS/MUS",
@@ -33,15 +33,15 @@
     },
     {
       "key": "mau",
-      "value": 73.3,
+      "value": 73.9,
       "target": 50,
-      "note": "🚀 超標 23.3%",
-      "noteEn": "🚀 +23.3% over target",
-      "noteEs": "🚀 +23.3% sobre el objetivo",
+      "note": "🚀 超標 23.9%",
+      "noteEn": "🚀 +23.9% over target",
+      "noteEs": "🚀 +23.9% sobre el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 79.4
+          "val": 82.4
         },
         {
           "id": "WYMTN",
@@ -49,7 +49,7 @@
         },
         {
           "id": "WYMY",
-          "val": 100.0
+          "val": 75.0
         },
         {
           "id": "WYUS/MUS",
@@ -63,11 +63,11 @@
     },
     {
       "key": "avghours",
-      "value": 7.0,
+      "value": 8.0,
       "target": 30,
-      "note": "⏱️ 距目標 23.0 分鐘",
-      "noteEn": "⏱️ 23.0 min to target",
-      "noteEs": "⏱️ 23.0 min hasta el objetivo",
+      "note": "⏱️ 距目標 22.0 分鐘",
+      "noteEn": "⏱️ 22.0 min to target",
+      "noteEs": "⏱️ 22.0 min hasta el objetivo",
       "sites": [
         {
           "id": "WYHQ",
@@ -79,7 +79,7 @@
         },
         {
           "id": "WYMY",
-          "val": 29.3
+          "val": 35.6
         },
         {
           "id": "WYUS/MUS",
@@ -105,8 +105,8 @@
     },
     {
       "id": "WYMY",
-      "participants": 3,
-      "activationRate": 0.4
+      "participants": 4,
+      "activationRate": 0.6
     },
     {
       "id": "WYUS",
@@ -133,7 +133,7 @@
     {
       "name": "Asher Chew",
       "site": "WYMY",
-      "hours": 1.5
+      "hours": 2.4
     },
     {
       "name": "Victor PH Lai",
@@ -151,7 +151,7 @@
       "hours": 0.3
     },
     {
-      "name": "Mah-ann Gonzalez",
+      "name": "Mah ANN Gonzalez",
       "site": "WYUS/MUS",
       "hours": 0.2
     },
