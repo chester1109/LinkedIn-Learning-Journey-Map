@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-27T10:00:00+08:00",
+  "updatedAt": "2026-08-28T10:00:00+08:00",
   "kpis": [
     {
       "key": "activation",
@@ -19,67 +19,7 @@
         },
         {
           "id": "WYMY",
-          "val": 0.6
-        },
-        {
-          "id": "WYUS/MUS",
-          "val": 2.3
-        },
-        {
-          "id": "WYMX",
-          "val": 0.1
-        }
-      ]
-    },
-    {
-      "key": "mau",
-      "value": 73.9,
-      "target": 50,
-      "note": "🚀 超標 23.9%",
-      "noteEn": "🚀 +23.9% over target",
-      "noteEs": "🚀 +23.9% sobre el objetivo",
-      "sites": [
-        {
-          "id": "WYHQ",
-          "val": 82.4
-        },
-        {
-          "id": "WYMTN",
-          "val": 33.3
-        },
-        {
-          "id": "WYMY",
-          "val": 75.0
-        },
-        {
-          "id": "WYUS/MUS",
-          "val": 50.0
-        },
-        {
-          "id": "WYMX",
-          "val": 0.0
-        }
-      ]
-    },
-    {
-      "key": "avghours",
-      "value": 8.0,
-      "target": 30,
-      "note": "⏱️ 距目標 22.0 分鐘",
-      "noteEn": "⏱️ 22.0 min to target",
-      "noteEs": "⏱️ 22.0 min hasta el objetivo",
-      "sites": [
-        {
-          "id": "WYHQ",
-          "val": 6.3
-        },
-        {
-          "id": "WYMTN",
-          "val": 0.0
-        },
-        {
-          "id": "WYMY",
-          "val": 35.6
+          "val": 0.7
         },
         {
           "id": "WYUS/MUS",
@@ -87,7 +27,67 @@
         },
         {
           "id": "WYMX",
+          "val": 0.4
+        }
+      ]
+    },
+    {
+      "key": "mau",
+      "value": 77.6,
+      "target": 50,
+      "note": "🚀 超標 27.6%",
+      "noteEn": "🚀 +27.6% over target",
+      "noteEs": "🚀 +27.6% sobre el objetivo",
+      "sites": [
+        {
+          "id": "WYHQ",
+          "val": 84.8
+        },
+        {
+          "id": "WYMTN",
+          "val": 33.3
+        },
+        {
+          "id": "WYMY",
+          "val": 100.0
+        },
+        {
+          "id": "WYUS/MUS",
+          "val": 40.0
+        },
+        {
+          "id": "WYMX",
+          "val": 66.7
+        }
+      ]
+    },
+    {
+      "key": "avghours",
+      "value": 7.9,
+      "target": 30,
+      "note": "⏱️ 距目標 22.1 分鐘",
+      "noteEn": "⏱️ 22.1 min to target",
+      "noteEs": "⏱️ 22.1 min hasta el objetivo",
+      "sites": [
+        {
+          "id": "WYHQ",
+          "val": 6.9
+        },
+        {
+          "id": "WYMTN",
           "val": 0.0
+        },
+        {
+          "id": "WYMY",
+          "val": 29.1
+        },
+        {
+          "id": "WYUS/MUS",
+          "val": 2.3
+        },
+        {
+          "id": "WYMX",
+          "val": 0.8
         }
       ]
     }
@@ -95,7 +95,7 @@
   "sites": [
     {
       "id": "WYHQ",
-      "participants": 34,
+      "participants": 33,
       "activationRate": 1.8
     },
     {
@@ -105,18 +105,18 @@
     },
     {
       "id": "WYMY",
-      "participants": 4,
-      "activationRate": 0.6
+      "participants": 5,
+      "activationRate": 0.7
     },
     {
       "id": "WYUS",
-      "participants": 4,
-      "activationRate": 2.3
+      "participants": 5,
+      "activationRate": 2.9
     },
     {
       "id": "WYMX",
-      "participants": 1,
-      "activationRate": 0.1
+      "participants": 3,
+      "activationRate": 0.4
     }
   ],
   "topLearners": [
@@ -133,17 +133,17 @@
     {
       "name": "Asher Chew",
       "site": "WYMY",
-      "hours": 2.4
+      "hours": 2.5
+    },
+    {
+      "name": "Iris CH Chen",
+      "site": "WYHQ",
+      "hours": 0.6
     },
     {
       "name": "Victor PH Lai",
       "site": "WYHQ",
       "hours": 0.6
-    },
-    {
-      "name": "Iris CH Chen",
-      "site": "WYHQ",
-      "hours": 0.5
     },
     {
       "name": "Eudoria Hsiao",
