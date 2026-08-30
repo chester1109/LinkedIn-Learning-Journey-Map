@@ -296,6 +296,12 @@
   .comp-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
   .comp-figure { flex: none; }
   .comp-progress { flex: 1 1 160px; min-width: 140px; }
+  .comp-sites { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 10px 6px; }
+  .comp-site { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 0 4px; }
+  .comp-site + .comp-site { border-left: 1px solid var(--hairline); }
+  .comp-site .cs-top { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; line-height: 1; }
+  .comp-site .code { color: var(--ink-2); font-weight: 600; letter-spacing: 0.02em; }
+  .comp-site .r { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--ink); }
   .comp-track { height: 10px; border-radius: 6px; background: rgba(10, 102, 194, 0.14); overflow: hidden; }
   .comp-track i { display: block; height: 100%; border-radius: 6px; background: var(--brand); }
   :root[data-theme="dark"] .comp-track { background: rgba(90, 164, 232, 0.24); }
@@ -802,9 +808,15 @@ var DASHBOARD_DATA = {
     tag: "Global Success Metric #4",
     label: "AI Learning Path Completion Rate (All Courses)", labelEn: "AI Learning Path Completion Rate (All Courses)", labelEs: "AI Learning Path Completion Rate (All Courses)",
     value: null, target: 100, unit: "%",   // null = 尚無資料(顯示「—」);data.json 帶入後才有數字
-    note: "活動自 2026/9/1 起計算", noteEn: "Tracking starts 1 Sep 2026", noteEs: "El seguimiento empieza el 1/9/2026",
-    gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo"
-    /* 註:2026-08 起本卡只顯示總體完訓率,不再列據點分項 */
+    note: "完訓率將自 2026 年 9 月 1 日起開始累計", noteEn: "Completion tracking starts on 1 Sep 2026", noteEs: "El seguimiento de finalización empieza el 1/9/2026",
+    /* 據點分項:rate 為 null = 尚無資料(顯示「—」);由 data.json 帶入真實比率 */
+    sites: [
+      { id: "WYHQ", rate: null },
+      { id: "WYMTN", rate: null },
+      { id: "WYMY", rate: null },
+      { id: "WYUS/MUS", rate: null },
+      { id: "WYMX", rate: null }
+    ]
   },
   sites: [
     {
@@ -1437,8 +1449,13 @@ function renderCompliance() {
       '<div class="comp-figure"><span class="comp-val">' + esc(bigTxt) + '</span>' +
         (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
       '</div>' +
-      (hasVal ? '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value)) + '%"></i></div></div>' : '') +
-    '</div>';
+      '<div class="comp-progress"><div class="comp-track"><i style="width:' + (hasVal ? clampRate(Number(c.value)) : 0) + '%"></i></div></div>' +
+    '</div>' +
+    ((c.sites && c.sites.length) ? '<div class="comp-sites">' + c.sites.map(function (s) {
+      const ok = s.rate !== null && s.rate !== "" && s.rate !== undefined && isFinite(Number(s.rate));
+      return '<div class="comp-site"><div class="cs-top"><span class="code">' + esc(s.id) + '</span></div>' +
+             '<div class="r">' + (ok ? esc(String(s.rate)) + '%' : '—') + '</div></div>';
+    }).join("") + '</div>' : '');
 }
 
 /* ── 活動推播牆(橫向輪播;可放多張活動 EDM)────────────────── */
