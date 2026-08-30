@@ -23,7 +23,8 @@
                      活動花絮 event:activities[name,src,emoji,caption,
                      quotes[text,who]] / likes / teamsUrl)
        - topLearners Top 10 Learner 排行(name / site / hours,
-                     依 hours 自動排序取前 10 名)
+                     依 hours 自動排序取前 10 名;
+                     空陣列 [] = 累計區間尚未開始,排行榜顯示空狀態)
        - updatedAt   最後更新時間;null = 顯示頁面載入時間
      之後接正式 API 時,取得同結構的資料後呼叫 renderDashboard(apiData)
      即可整頁重繪(也可先覆寫全域變數 DASHBOARD_DATA 再呼叫
@@ -301,13 +302,6 @@
   .comp-val { font-size: 34px; font-weight: 680; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
   .comp-gap { text-align: right; }
   .comp-gap-v { display: block; font-size: 15px; font-weight: 700; color: var(--good); font-variant-numeric: tabular-nums; }
-  .comp-sites { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 14px 6px; }
-  .comp-site { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 0 4px; }
-  .comp-site + .comp-site { border-left: 1px solid var(--hairline); }
-  .comp-site .cs-top { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; line-height: 1; }
-  .comp-site .code { color: var(--ink-2); font-weight: 600; letter-spacing: 0.02em; }
-  .comp-site .cmark { font-weight: 700; font-size: 13px; }
-  .comp-site .r { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--ink); }
   .st-good { color: var(--good); }
   .st-warn { color: #b47800; }
   .st-bad { color: #c0392b; }
@@ -580,6 +574,10 @@
   .lb .who .st { font-size: 11px; color: var(--panel-ink-3); }
   .lb .hrs { flex: none; text-align: right; font-size: 14px; font-weight: 650; color: var(--panel-ink); font-variant-numeric: tabular-nums; }
   .lb .hrs span { font-size: 10.5px; font-weight: 400; color: var(--panel-ink-3); margin-left: 2px; }
+  /* 排行榜空狀態:累計區間(2026/9/1 起)還沒開始時顯示 */
+  .lb li.empty { display: block; padding: 20px 4px; text-align: center; font-size: 12.5px;
+                 line-height: 1.75; color: var(--panel-ink-3); border-bottom: none; }
+  .lb li.empty .emo { display: block; font-size: 24px; margin-bottom: 8px; opacity: 0.9; }
 
   /* ── 據點明細表 ───────────────────────── */
   .detail { margin-top: 22px; background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; box-shadow: var(--tile-shadow); overflow: hidden; }
@@ -783,14 +781,8 @@ var DASHBOARD_DATA = {
     label: "AI Learning Path Completion Rate (All Courses)", labelEn: "AI Learning Path Completion Rate (All Courses)", labelEs: "AI Learning Path Completion Rate (All Courses)",
     value: 91, target: 100, unit: "%",
     note: "已完成 41 人", noteEn: "41 people completed", noteEs: "41 personas completaron",
-    gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo",
-    sites: [
-      { id: "WYHQ", rate: 100 },
-      { id: "WYMTN", rate: 100 },
-      { id: "WYMY", rate: 85 },
-      { id: "WYUS/MUS", rate: 95 },
-      { id: "WYMX", rate: 75 }
-    ]
+    gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo"
+    /* 註:2026-08 起本卡只顯示總體完訓率,不再列據點分項 */
   },
   sites: [
     {
@@ -967,24 +959,7 @@ var DASHBOARD_DATA = {
     /* bare: true = 整張 EDM 滿版顯示,不疊標題/文案/CTA(圖上已有完整資訊) */
     { tone: "leader", bare: true, image: "photos/top10-leaderboard-edm.jpg",
       link: "https://www.linkedin.com/learning/?u=514123418",
-      title: "Top 10 Learner 排行榜挑戰", titleEn: "Top 10 Learner Leaderboard Challenge", titleEs: "Reto del Top 10 de Aprendices" },
-    { tone: "challenge", image: "photos/ai-literacy-journey-full.jpg", tag: "全球 · 學習旅程",
-      title: "AI Literacy Journey", titleEn: "AI Literacy Journey", titleEs: "AI Literacy Journey",
-      sub: "🎯 完成 3 門 AI 課程，挑戰 AI 新技能！", subEn: "🎯 Complete 3 AI courses and take on new AI skills!", subEs: "🎯 ¡Completa 3 cursos de IA y domina nuevas habilidades de IA!",
-      cta: "開始旅程", ctaEn: "Start the journey", ctaEs: "Comenzar el viaje",
-      bullets: ["掌握 AI 基礎知識", "提升工作效率", "培養 AI 時代必備能力", "完成旅程即可獲得限定成就徽章"], bulletsEn: ["Master AI fundamentals", "Work more efficiently", "Build must-have AI-era skills", "Finish the journey to earn a limited badge"], bulletsEs: ["Domina los fundamentos de IA", "Trabaja con más eficiencia", "Desarrolla habilidades clave de la era IA", "Termina el viaje y gana una insignia"] },
-    { tone: "party", image: "photos/wyhq-ai-selfie.jpg", tag: "全球 · 線上活動",
-      title: "線上闖關挑戰", titleEn: "Online Learning Quest", titleEs: "Reto de Aprendizaje en Línea",
-      sub: "🎯 全程線上參與，完成 5 大關卡，解鎖挑戰獎勵！完成所有關卡，即有機會抽 LinkedIn 精美好禮 🎁", subEn: "🎯 Join online anywhere — clear all 5 levels to unlock the challenge reward! Finish them all for a chance to win LinkedIn goodies 🎁", subEs: "🎯 Participa en línea — ¡supera los 5 niveles y desbloquea la recompensa! Complétalos todos y participa por regalos de LinkedIn 🎁",
-      steps: ["下載 App", "探索興趣", "AI 教練", "設定時數目標", "開始 AI 課程"],
-      stepsEn: ["Download app", "Discover interests", "AI coaching", "Set hour goal", "Start AI course"],
-      stepsEs: ["Descarga la app", "Descubre intereses", "Coach de IA", "Fija tu meta", "Empieza un curso"],
-      cta: "立即線上闖關", ctaEn: "Start the quest online", ctaEs: "Empieza el reto en línea" },
-    { tone: "leader", image: "photos/learning-hours-sprint-full.jpg", tag: "全球 · 排行榜",
-      title: "學習時數衝刺賽", titleEn: "Learning Hours Sprint", titleEs: "Sprint de Horas de Aprendizaje",
-      sub: "衝進全球 Top 10,登上學習排行榜!", subEn: "Reach the global Top 10 learning leaderboard!", subEs: "¡Llega al Top 10 mundial de aprendizaje!",
-      cta: "查看排行榜", ctaEn: "View leaderboard", ctaEs: "Ver ranking",
-      bullets: ["每日累積學習時數", "與各據點同仁 PK", "為你的據點爭光"], bulletsEn: ["Log hours every day", "Compete across all sites", "Bring glory to your site"], bulletsEs: ["Acumula horas cada día", "Compite entre sedes", "Da gloria a tu sede"] }
+      title: "Top 10 Learner 排行榜挑戰", titleEn: "Top 10 Learner Leaderboard Challenge", titleEs: "Reto del Top 10 de Aprendices" }
   ]
 };
 
@@ -1009,6 +984,7 @@ var I18N = {
     demoNote: "Demo 測試資料 · 正式數據由 IT 介接",
     topHours: "累計時數",
     hoursUnit: "小時",
+    lbEmpty: "排行榜自 2026/9/1 起開始累計，敬請期待！",
     detailHead: "據點明細",
     detailNote: "地圖資料的完整表格檢視（含各據點聯絡資訊）",
     thSite: "據點", thLocation: "地點", thAddress: "地址", thPhone: "電話",
@@ -1053,6 +1029,7 @@ var I18N = {
     demoNote: "Demo data · live figures via IT integration",
     topHours: "Total hours",
     hoursUnit: "hrs",
+    lbEmpty: "The leaderboard starts counting from Sep 1, 2026. Stay tuned!",
     detailHead: "Site Details",
     detailNote: "Full table view of the map data (incl. contact info)",
     thSite: "Site", thLocation: "Location", thAddress: "Address", thPhone: "Phone",
@@ -1097,6 +1074,7 @@ var I18N = {
     demoNote: "Datos de demostración · cifras reales vía integración de TI",
     topHours: "Horas totales",
     hoursUnit: "h",
+    lbEmpty: "La clasificación empieza a contar el 1 de septiembre de 2026. ¡Muy pronto!",
     detailHead: "Detalles por sede",
     detailNote: "Vista de tabla completa de los datos del mapa (incl. datos de contacto)",
     thSite: "Sede", thLocation: "Ubicación", thAddress: "Dirección", thPhone: "Teléfono",
@@ -1270,6 +1248,18 @@ function renderTopLearners() {
     .slice()
     .sort(function (a, b) { return (Number(b.hours) || 0) - (Number(a.hours) || 0); })
     .slice(0, 10);
+  /* 名單為空(data.json 的 topLearners 給 []) = 累計區間尚未開始 → 空狀態 */
+  if (!list.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    const emo = document.createElement("span");
+    emo.className = "emo";
+    emo.textContent = "🏁";
+    li.appendChild(emo);
+    li.appendChild(document.createTextNode(T("lbEmpty")));
+    ol.appendChild(li);
+    return;
+  }
   for (const p of list) {
     const li = document.createElement("li");
     const rank = document.createElement("span");
@@ -1399,15 +1389,6 @@ function renderCompliance() {
   if (!c) { box.style.display = "none"; return; }
   box.style.display = "";
   const bigTxt = c.value + (c.unit || "");
-  let sitesHtml = "";
-  for (const s of (c.sites || [])) {
-    /* 只追蹤完成比率,不做達標判定(無 ✓/!) */
-    sitesHtml +=
-      '<div class="comp-site">' +
-        '<div class="cs-top"><span class="code">' + esc(s.id) + '</span></div>' +
-        '<div class="r">' + esc(String(s.rate)) + '%</div>' +
-      '</div>';
-  }
   box.innerHTML =
     '<div class="kpi-head">' +
       '<div class="kpi-ic comp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>' +
@@ -1419,8 +1400,7 @@ function renderCompliance() {
         (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
       '</div>' +
       '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value)) + '%"></i></div></div>' +
-    '</div>' +
-    '<div class="comp-sites">' + sitesHtml + '</div>';
+    '</div>';
 }
 
 /* ── 活動推播牆(橫向輪播;可放多張活動 EDM)────────────────── */
@@ -1892,10 +1872,10 @@ renderDashboard();
      "kpis": [{ "key": "activation", "value": 78, "target": 90,
                 "note": "🎯 目標達成率 86.7%",
                 "sites": [{ "id": "WYHQ", "val": 93 }, ...] }, ...],
-     "compliance": { "value": 91, "target": 100, "note": "剩餘 287 人未完成",
-                     "gap": "+9%", "sites": [{ "id": "WYHQ", "rate": 100 }, ...] },
+     "compliance": { "value": 91, "target": 100, "note": "剩餘 287 人未完成", "gap": "+9%" },
      "sites": [{ "id": "WYHQ", "participants": 872, "activationRate": 93, "courses": 1842 }, ...],
      "topLearners": [{ "name": "陳雅婷", "site": "WYHQ", "hours": 42.5 }, ...]
+                     ↑ 給 [] 則刻意清空排行榜(累計區間 2026/9/1 起，尚未開始)
    }
    ══════════════════════════════════════════════════════════════ */
 function isNum(v) { return typeof v === "number" && isFinite(v); }
@@ -1929,10 +1909,7 @@ function applyDataPatch(p) {
     if (isNum(c.target)) dst.target = c.target;
     if (typeof c.note === "string") { dst.note = c.note; dst.noteEn = c.noteEn || c.note; dst.noteEs = c.noteEs || c.note; }
     if (typeof c.gap === "string") dst.gap = c.gap;
-    if (Array.isArray(c.sites)) {
-      const rows = c.sites.filter(function (s) { return s && s.id != null && isNum(s.rate); });
-      if (rows.length) dst.sites = rows.map(function (s) { return { id: String(s.id), rate: s.rate }; });
-    }
+    /* 本卡只顯示總體完訓率,不吃據點分項(c.sites 已移除) */
     touched = true;
   }
 
@@ -1950,8 +1927,10 @@ function applyDataPatch(p) {
 
   /* Top 10 排行榜 */
   if (Array.isArray(p.topLearners)) {
-    const rows = p.topLearners.filter(function (t) { return t && t.name && isNum(t.hours); });
-    if (rows.length) { DASHBOARD_DATA.topLearners = rows; touched = true; }
+    /* 空陣列是有意義的:代表累計區間(2026/9/1 起)還沒開始,要清空排行榜 */
+    DASHBOARD_DATA.topLearners =
+      p.topLearners.filter(function (t) { return t && t.name && isNum(t.hours); });
+    touched = true;
   }
 
   return touched;
