@@ -574,6 +574,27 @@
   .lb .who .st { font-size: 11px; color: var(--panel-ink-3); }
   .lb .hrs { flex: none; text-align: right; font-size: 14px; font-weight: 650; color: var(--panel-ink); font-variant-numeric: tabular-nums; }
   .lb .hrs span { font-size: 10.5px; font-weight: 400; color: var(--panel-ink-3); margin-left: 2px; }
+
+  /* Top 10 空狀態(累計尚未開始):獎盃 + 說明 + 骨架佔位 */
+  .lb li.lb-soon { display: block; border-bottom: none; padding: 4px 0 0; }
+  .lb-soon-head { text-align: center; padding: 10px 0 16px; }
+  .lb-trophy { font-size: 34px; line-height: 1; filter: drop-shadow(0 0 10px rgba(255, 201, 77, 0.45)); }
+  .lb-soon-title { margin-top: 10px; font-size: 14.5px; font-weight: 700; color: var(--panel-ink); }
+  .lb-soon-sub { margin-top: 6px; font-size: 12.5px; color: var(--panel-ink-2); line-height: 1.5; }
+  .lb-soon-sub b { color: var(--glow); font-weight: 700; }
+  .sk-list { display: flex; flex-direction: column; gap: 8px; }
+  .sk-row { display: flex; align-items: center; gap: 10px; }
+  .sk-rank {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12.5px; font-weight: 700;
+    color: var(--panel-ink-3); background: rgba(184, 203, 228, 0.10);
+  }
+  .sk-rank.medal.m1 { background: linear-gradient(135deg, #ffd97a, #ffc94d); color: #0a1c36; }
+  .sk-rank.medal.m2 { background: linear-gradient(135deg, #dce6f2, #b9c8dc); color: #0a1c36; }
+  .sk-rank.medal.m3 { background: linear-gradient(135deg, #e2b185, #c98e5a); color: #0a1c36; }
+  .sk-bar { height: 12px; border-radius: 6px; background: rgba(184, 203, 228, 0.14); animation: skPulse 1.9s ease-in-out infinite; }
+  .sk-bar.sk-hrs { flex: none; width: 44px; margin-left: auto; }
+  @keyframes skPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
   /* 排行榜空狀態:累計區間(2026/9/1 起)還沒開始時顯示 */
   .lb li.empty { display: block; padding: 20px 4px; text-align: center; font-size: 12.5px;
                  line-height: 1.75; color: var(--panel-ink-3); border-bottom: none; }
@@ -619,6 +640,7 @@
     .scard .meter i { transition: none; }
     .modal { animation: none; }
     .scard .s-hint { transition: none; }
+    .sk-bar { animation: none; }
   }
 </style>
 </head>
@@ -779,8 +801,8 @@ var DASHBOARD_DATA = {
   compliance: {
     tag: "Global Success Metric #4",
     label: "AI Learning Path Completion Rate (All Courses)", labelEn: "AI Learning Path Completion Rate (All Courses)", labelEs: "AI Learning Path Completion Rate (All Courses)",
-    value: 91, target: 100, unit: "%",
-    note: "已完成 41 人", noteEn: "41 people completed", noteEs: "41 personas completaron",
+    value: null, target: 100, unit: "%",   // null = 尚無資料(顯示「—」);data.json 帶入後才有數字
+    note: "活動自 2026/9/1 起計算", noteEn: "Tracking starts 1 Sep 2026", noteEs: "El seguimiento empieza el 1/9/2026",
     gap: "+9%", gapLabel: "距離目標", gapLabelEn: "to target", gapLabelEs: "hasta el objetivo"
     /* 註:2026-08 起本卡只顯示總體完訓率,不再列據點分項 */
   },
@@ -1010,6 +1032,7 @@ var I18N = {
     sitesToggle: "各據點明細",
     boardBtn: "💬 留言板", boardSend: "送出留言", boardWho: "訪客", boardNamePh: "你的暱稱(選填)", boardTextPh: "寫下你對這個活動的留言…", boardHint: "留言僅存在你的瀏覽器(demo);跨使用者公開留言需後端",
     bcastAria: "活動推播",
+    lbSoonTitle: "Top 10 Learner 排行榜即將揭曉", lbSoonSub: "學習時數將自 {date} 起正式累計",
     locale: "zh-Hant"
   },
   en: {
@@ -1055,6 +1078,7 @@ var I18N = {
     sitesToggle: "By site",
     boardBtn: "💬 Message board", boardSend: "Post", boardWho: "Guest", boardNamePh: "Your name (optional)", boardTextPh: "Write a comment about this activity…", boardHint: "Comments are saved in your browser only (demo); a shared board needs a backend",
     bcastAria: "Campaign announcements",
+    lbSoonTitle: "Top 10 Learner leaderboard coming soon", lbSoonSub: "Learning hours start counting on {date}",
     locale: "en-US"
   },
   es: {
@@ -1100,6 +1124,7 @@ var I18N = {
     sitesToggle: "Por sede",
     boardBtn: "💬 Tablón de mensajes", boardSend: "Publicar", boardWho: "Invitado", boardNamePh: "Tu nombre (opcional)", boardTextPh: "Escribe un comentario sobre esta actividad…", boardHint: "Los comentarios se guardan solo en tu navegador (demo); un tablón compartido requiere backend",
     bcastAria: "Anuncios de campañas",
+    lbSoonTitle: "El ranking Top 10 llegará pronto", lbSoonSub: "Las horas empiezan a contar el {date}",
     locale: "es-MX"
   }
 };
@@ -1251,12 +1276,20 @@ function renderTopLearners() {
   /* 名單為空(data.json 的 topLearners 給 []) = 累計區間尚未開始 → 空狀態 */
   if (!list.length) {
     const li = document.createElement("li");
-    li.className = "empty";
-    const emo = document.createElement("span");
-    emo.className = "emo";
-    emo.textContent = "🏁";
-    li.appendChild(emo);
-    li.appendChild(document.createTextNode(T("lbEmpty")));
+    li.className = "lb-soon";
+    let sk = "";
+    for (let i = 1; i <= 10; i++) {
+      sk += '<div class="sk-row"><span class="sk-rank' + (i <= 3 ? " medal m" + i : "") + '">' + i + '</span>' +
+            '<span class="sk-bar" style="width:' + (52 + ((i * 11) % 34)) + '%"></span>' +
+            '<span class="sk-bar sk-hrs"></span></div>';
+    }
+    li.innerHTML =
+      '<div class="lb-soon-head">' +
+        '<div class="lb-trophy" aria-hidden="true">🏆</div>' +
+        '<div class="lb-soon-title">' + esc(T("lbSoonTitle")) + '</div>' +
+        '<div class="lb-soon-sub">' + esc(T("lbSoonSub")).replace("{date}", '<b>' + esc(LB_START) + '</b>') + '</div>' +
+      '</div>' +
+      '<div class="sk-list" aria-hidden="true">' + sk + '</div>';
     ol.appendChild(li);
     return;
   }
@@ -1350,6 +1383,9 @@ function renderDeltas() {
 
 /* 整頁重繪。IT 接 API:renderDashboard(apiData) 即可 */
 /* ── 達標型 KPI + 合規卡渲染(取代原三個統計磁貼)────────────── */
+/* Top 10 累計起算日(與 tools/build_data.py 的 CUM_START 一致) */
+var LB_START = "2026/9/1";
+
 var kpiSitesOpen = false;
 try { kpiSitesOpen = localStorage.getItem("llmap-kpisites") === "1"; } catch (err) { kpiSitesOpen = false; }
 var KPI_ICONS = {
@@ -1388,7 +1424,9 @@ function renderCompliance() {
   const c = DASHBOARD_DATA.compliance;
   if (!c) { box.style.display = "none"; return; }
   box.style.display = "";
-  const bigTxt = c.value + (c.unit || "");
+  /* 沒有真實數值(null/空/非數字)時顯示「—」,不要拿內嵌 demo 值當真實數據 */
+  const hasVal = c.value !== null && c.value !== "" && c.value !== undefined && isFinite(Number(c.value));
+  const bigTxt = hasVal ? (c.value + (c.unit || "")) : "—";
   box.innerHTML =
     '<div class="kpi-head">' +
       '<div class="kpi-ic comp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>' +
@@ -1399,7 +1437,7 @@ function renderCompliance() {
       '<div class="comp-figure"><span class="comp-val">' + esc(bigTxt) + '</span>' +
         (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
       '</div>' +
-      '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value)) + '%"></i></div></div>' +
+      (hasVal ? '<div class="comp-progress"><div class="comp-track"><i style="width:' + clampRate(Number(c.value)) + '%"></i></div></div>' : '') +
     '</div>';
 }
 
