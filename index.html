@@ -600,6 +600,14 @@
   .sk-rank.medal.m3 { background: linear-gradient(135deg, #e2b185, #c98e5a); color: #0a1c36; }
   .sk-bar { height: 12px; border-radius: 6px; background: rgba(184, 203, 228, 0.14); animation: skPulse 1.9s ease-in-out infinite; }
   .sk-bar.sk-hrs { flex: none; width: 44px; margin-left: auto; }
+
+  /* 排行榜面板底部:參與方式提醒(貼齊面板下緣) */
+  .lb-notice {
+    margin-top: auto; padding-top: 14px;
+    border-top: 1px solid var(--panel-line);
+    font-size: 11.5px; line-height: 1.7; color: var(--panel-ink-3);
+    text-align: left;
+  }
   @keyframes skPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
   /* 排行榜空狀態:累計區間(2026/9/1 起)還沒開始時顯示 */
   .lb li.empty { display: block; padding: 20px 4px; text-align: center; font-size: 12.5px;
@@ -723,7 +731,7 @@
       <div id="siteListMobile" class="site-list" aria-label="各據點學習進度"></div>
       <div class="map-foot">
         <span class="hint"><span class="spark" aria-hidden="true"></span><span data-i18n="mapHint">地圖上的亮點，是我們遍布全球的據點！</span></span>
-        <span data-i18n="demoNote">Demo 測試資料 · 正式數據由 IT 介接</span>
+        <span data-i18n="demoNote"></span>
       </div>
     </div>
 
@@ -733,10 +741,11 @@
         Top 10 Learner <span class="live" data-i18n="topHours">累計時數</span>
       </h2>
       <ol id="learnerList" class="lb"></ol>
+      <p class="lb-notice" data-i18n="lbNotice"></p>
     </aside>
   </section>
 
-  <footer class="pagefoot" data-i18n="footer">LinkedIn Learning 全球 Launch · 學習發展團隊 · 本頁為 Demo，數值為測試資料</footer>
+  <footer class="pagefoot" data-i18n="footer">LinkedIn Learning 全球 Launch · 學習發展團隊</footer>
 </div>
 
 <!-- 據點活動花絮彈窗(內容由 openEvent() 依 DASHBOARD_DATA 填入) -->
@@ -1015,7 +1024,7 @@ var I18N = {
     mapHead: "全球據點即時進度",
     mapTag: "全球據點同步啟動 · 亮起你的學習足跡",
     mapHint: "✨ 地圖上的亮點，是我們遍布全球的據點！",
-    demoNote: "Demo 測試資料 · 正式數據由 IT 介接",
+    demoNote: "",
     topHours: "累計時數",
     hoursUnit: "小時",
     lbEmpty: "排行榜自 2026/9/1 起開始累計，敬請期待！",
@@ -1023,7 +1032,7 @@ var I18N = {
     detailNote: "地圖資料的完整表格檢視（含各據點聯絡資訊）",
     thSite: "據點", thLocation: "地點", thAddress: "地址", thPhone: "電話",
     thParticipants: "參與人數", thActivation: "啟動率", thCourses: "完成課程",
-    footer: "LinkedIn Learning 全球 Launch · 學習發展團隊 · 本頁為 Demo，數值為測試資料",
+    footer: "LinkedIn Learning 全球 Launch · 學習發展團隊",
     cardParticipants: "人參與",
     cardActivation: "啟動率",
     cardHint: "👆 點擊查看活動花絮 →",
@@ -1045,6 +1054,7 @@ var I18N = {
     boardBtn: "💬 留言板", boardSend: "送出留言", boardWho: "訪客", boardNamePh: "你的暱稱(選填)", boardTextPh: "寫下你對這個活動的留言…", boardHint: "留言僅存在你的瀏覽器(demo);跨使用者公開留言需後端",
     bcastAria: "活動推播",
     lbSoonTitle: "Top 10 Learner 排行榜即將揭曉", lbSoonSub: "學習時數將自 {date} 起正式累計",
+    lbNotice: "溫馨提醒：請以「本人親自觀看、實際學習」的方式參與。若透過其他非實際學習的方式累積時數，經查證屬實則不予採計，主辦單位保留檢視學習紀錄的權力。",
     locale: "zh-Hant"
   },
   en: {
@@ -1061,7 +1071,7 @@ var I18N = {
     mapHead: "Live Progress by Site",
     mapTag: "All sites launched together · light up your learning journey",
     mapHint: "✨ Each glowing point is one of our sites around the world!",
-    demoNote: "Demo data · live figures via IT integration",
+    demoNote: "",
     topHours: "Total hours",
     hoursUnit: "hrs",
     lbEmpty: "The leaderboard starts counting from Sep 1, 2026. Stay tuned!",
@@ -1069,7 +1079,7 @@ var I18N = {
     detailNote: "Full table view of the map data (incl. contact info)",
     thSite: "Site", thLocation: "Location", thAddress: "Address", thPhone: "Phone",
     thParticipants: "Participants", thActivation: "Activation", thCourses: "Courses",
-    footer: "LinkedIn Learning Global Launch · Learning & Development · Demo page, sample data",
+    footer: "LinkedIn Learning Global Launch · Learning & Development",
     cardParticipants: "learners",
     cardActivation: "Activation",
     cardHint: "👆 Tap for activity highlights →",
@@ -1091,6 +1101,7 @@ var I18N = {
     boardBtn: "💬 Message board", boardSend: "Post", boardWho: "Guest", boardNamePh: "Your name (optional)", boardTextPh: "Write a comment about this activity…", boardHint: "Comments are saved in your browser only (demo); a shared board needs a backend",
     bcastAria: "Campaign announcements",
     lbSoonTitle: "Top 10 Learner leaderboard coming soon", lbSoonSub: "Learning hours start counting on {date}",
+    lbNotice: "Friendly reminder: please take part by genuinely watching and learning yourself. Hours accumulated by any means other than real learning will not be counted once verified, and the organizer reserves the right to review learning records.",
     locale: "en-US"
   },
   es: {
@@ -1107,7 +1118,7 @@ var I18N = {
     mapHead: "Progreso en vivo por sede",
     mapTag: "Todas las sedes en marcha · ilumina tu camino de aprendizaje",
     mapHint: "✨ ¡Cada punto brillante es una de nuestras sedes en el mundo!",
-    demoNote: "Datos de demostración · cifras reales vía integración de TI",
+    demoNote: "",
     topHours: "Horas totales",
     hoursUnit: "h",
     lbEmpty: "La clasificación empieza a contar el 1 de septiembre de 2026. ¡Muy pronto!",
@@ -1115,7 +1126,7 @@ var I18N = {
     detailNote: "Vista de tabla completa de los datos del mapa (incl. datos de contacto)",
     thSite: "Sede", thLocation: "Ubicación", thAddress: "Dirección", thPhone: "Teléfono",
     thParticipants: "Participantes", thActivation: "Activación", thCourses: "Cursos",
-    footer: "Lanzamiento Global de LinkedIn Learning · Formación y Desarrollo · Página de demostración, datos de muestra",
+    footer: "Lanzamiento Global de LinkedIn Learning · Formación y Desarrollo",
     cardParticipants: "participantes",
     cardActivation: "Activación",
     cardHint: "👆 Toca para ver los momentos destacados →",
@@ -1137,6 +1148,7 @@ var I18N = {
     boardBtn: "💬 Tablón de mensajes", boardSend: "Publicar", boardWho: "Invitado", boardNamePh: "Tu nombre (opcional)", boardTextPh: "Escribe un comentario sobre esta actividad…", boardHint: "Los comentarios se guardan solo en tu navegador (demo); un tablón compartido requiere backend",
     bcastAria: "Anuncios de campañas",
     lbSoonTitle: "El ranking Top 10 llegará pronto", lbSoonSub: "Las horas empiezan a contar el {date}",
+    lbNotice: "Recordatorio: participa viendo y aprendiendo realmente por ti mismo. Las horas acumuladas por medios distintos al aprendizaje real no se contabilizarán si se verifica, y la organización se reserva el derecho de revisar los registros de aprendizaje.",
     locale: "es-MX"
   }
 };
