@@ -4,11 +4,11 @@
   "kpis": [
     {
       "key": "activation",
-      "value": 20.5,
+      "value": 20.6,
       "target": 90,
-      "note": "🎯 目標達成率 22.8%",
-      "noteEn": "🎯 22.8% of target",
-      "noteEs": "🎯 22.8% del objetivo",
+      "note": "🎯 目標達成率 22.9%",
+      "noteEn": "🎯 22.9% of target",
+      "noteEs": "🎯 22.9% del objetivo",
       "sites": [
         {
           "id": "WYHQ",
@@ -20,7 +20,7 @@
         },
         {
           "id": "WYMY",
-          "val": 29.8
+          "val": 30.0
         },
         {
           "id": "WYUS/MUS",
@@ -107,7 +107,7 @@
     {
       "id": "WYMY",
       "participants": 204,
-      "activationRate": 29.8
+      "activationRate": 30.0
     },
     {
       "id": "WYUS",
@@ -173,9 +173,9 @@
     }
   ],
   "compliance": {
-    "value": 0.6,
-    "note": "已完成 5 人 / 已啟用 895 人",
-    "noteEn": "5 completed / 895 activated",
-    "noteEs": "5 completadas / 895 activadas"
+    "value": 0.4,
+    "note": "已完成 4 人 / 已啟用 895 人",
+    "noteEn": "4 completed / 895 activated",
+    "noteEs": "4 completadas / 895 activadas"
   }
 }
