@@ -47,17 +47,8 @@
        - 深連結:網址帶 #site=據點ID(如 #site=WYMY)直接開啟彈窗。
 -->
 <script>
-  /* 主題早期定調:先於畫面渲染套上 data-theme,避免載入時閃一下錯色。
-     優先用使用者存過的選擇(llmap-theme),否則跟隨系統 prefers-color-scheme。 */
-  (function () {
-    try {
-      var saved = localStorage.getItem("llmap-theme");
-      var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.setAttribute("data-theme", saved || (dark ? "dark" : "light"));
-    } catch (err) {
-      document.documentElement.setAttribute("data-theme", "light");
-    }
-  })();
+  /* 主題固定深色(2026-09 起移除淺色模式與切換鈕):先於渲染套上,避免載入閃色。 */
+  document.documentElement.setAttribute("data-theme", "dark");
 </script>
 <style>
   :root {
@@ -85,7 +76,6 @@
   }
   /* 深色主題:由 <html data-theme="dark"> 觸發(JS 依使用者選擇/系統設定設定)。
      頁首腳本已先套上 data-theme,因此不再直接依賴 @media,改由屬性驅動可手動切換。 */
-  :root[data-theme="light"] { color-scheme: light; }
   :root[data-theme="dark"] {
     color-scheme: dark;
     --page:        #0d1320;
@@ -190,20 +180,6 @@
   .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); animation: livepulse 2.4s ease-in-out infinite; }
   @keyframes livepulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
   .hero-tools { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 12px; }
-  .theme-toggle {
-    flex: none; display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 50%;
-    background: var(--card); border: 1px solid var(--hairline); color: var(--ink-2);
-    cursor: pointer; box-shadow: var(--tile-shadow);
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
-  }
-  .theme-toggle:hover { color: var(--ink); border-color: var(--brand); }
-  .theme-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .theme-toggle svg { width: 20px; height: 20px; }
-  /* 淺色時顯示月亮(點了切深色);深色時顯示太陽(點了切淺色) */
-  .theme-toggle .icon-sun { display: none; }
-  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
-  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 
   /* 頁首主要行動:前往 LinkedIn Learning(固定 LinkedIn 藍,深淺色皆維持白字對比約 5.7:1) */
   .cta-ll {
@@ -671,10 +647,6 @@
         <button type="button" data-lang="en">EN</button>
         <button type="button" data-lang="es">ES</button>
       </div>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切換深色/淺色模式">
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      </button>
         <div class="hero-badge"><span class="dot" aria-hidden="true"></span><span data-i18n="updatedEvery">每日 10:00 更新</span>&ensp;·&ensp;<span id="lastUpdated">—</span></div>
       </div>
       <div class="hero-actions">
@@ -1023,7 +995,6 @@ var I18N = {
     cardParticipants: "人參與",
     cardActivation: "啟動率",
     cardHint: "👆 點擊查看活動花絮 →",
-    themeToLight: "切換至淺色模式", themeToDark: "切換至深色模式",
     langLabel: "語言 / Language",
     closeModal: "關閉視窗", prevAct: "上一個活動", nextAct: "下一個活動",
     modalTitleFallback: "活動花絮", actFallback: "活動",
@@ -1070,7 +1041,6 @@ var I18N = {
     cardParticipants: "learners",
     cardActivation: "Activation",
     cardHint: "👆 Tap for activity highlights →",
-    themeToLight: "Switch to light mode", themeToDark: "Switch to dark mode",
     langLabel: "語言 / Language",
     closeModal: "Close", prevAct: "Previous activity", nextAct: "Next activity",
     modalTitleFallback: "Activity Highlights", actFallback: "Activity",
@@ -1117,7 +1087,6 @@ var I18N = {
     cardParticipants: "participantes",
     cardActivation: "Activación",
     cardHint: "👆 Toca para ver los momentos destacados →",
-    themeToLight: "Cambiar a modo claro", themeToDark: "Cambiar a modo oscuro",
     langLabel: "Idioma / Language",
     closeModal: "Cerrar", prevAct: "Actividad anterior", nextAct: "Actividad siguiente",
     modalTitleFallback: "Momentos destacados", actFallback: "Actividad",
@@ -2021,57 +1990,12 @@ function applyDataPatch(p) {
   }
 })();
 
-/* ── 深/淺色主題切換 ──────────────────────────────────
-   頁首腳本已依 llmap-theme(或系統設定)先套上 data-theme;
-   這裡負責按鈕切換、儲存選擇,並在使用者尚未手動選過時跟隨系統變化。 */
-(function () {
-  const root = document.documentElement;
-  const btn = document.getElementById("themeToggle");
-  if (!btn) return;
-
-  function syncBtn() {
-    const dark = root.getAttribute("data-theme") === "dark";
-    const label = dark ? T("themeToLight") : T("themeToDark");
-    btn.setAttribute("aria-label", label);
-    btn.title = label;
-    btn.setAttribute("aria-pressed", dark ? "true" : "false");
-  }
-  syncBtn();
-
-  btn.addEventListener("click", function () {
-    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    try { localStorage.setItem("llmap-theme", next); } catch (err) { /* 隱私模式等情況忽略 */ }
-    syncBtn();
-  });
-
-  /* 使用者沒手動選過時,即時跟隨系統深/淺色設定變化 */
-  if (window.matchMedia) {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onSystemChange = function (e) {
-      let chosen = false;
-      try { chosen = !!localStorage.getItem("llmap-theme"); } catch (err) { /* 忽略 */ }
-      if (chosen) return;
-      root.setAttribute("data-theme", e.matches ? "dark" : "light");
-      syncBtn();
-    };
-    if (mq.addEventListener) mq.addEventListener("change", onSystemChange);
-    else if (mq.addListener) mq.addListener(onSystemChange);
-  }
-})();
-
-
 /* ── 語言切換(繁中 / English):套用靜態文案 + 重繪動態文字,選擇存 localStorage ── */
 function applyI18n() {
   document.documentElement.setAttribute("lang", currentLang === "zh" ? "zh-Hant" : currentLang);
   for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = T(node.getAttribute("data-i18n"));
   for (const node of document.querySelectorAll("[data-i18n-aria]")) node.setAttribute("aria-label", T(node.getAttribute("data-i18n-aria")));
   for (const node of document.querySelectorAll("[data-i18n-ph]")) node.setAttribute("placeholder", T(node.getAttribute("data-i18n-ph")));
-  const tb = document.getElementById("themeToggle");
-  if (tb) {
-    const lbl = document.documentElement.getAttribute("data-theme") === "dark" ? T("themeToLight") : T("themeToDark");
-    tb.setAttribute("aria-label", lbl); tb.title = lbl;
-  }
 }
 function syncLangBtns() {
   for (const b of document.querySelectorAll(".lang-toggle button")) {
