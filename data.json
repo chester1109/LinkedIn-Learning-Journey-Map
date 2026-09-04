@@ -1,94 +1,94 @@
 {
-  "updatedAt": "2026-09-03T10:00:00+08:00",
-  "dataAsOf": "2026-09-02",
+  "updatedAt": "2026-09-04T10:00:00+08:00",
+  "dataAsOf": "2026-09-03",
   "kpis": [
     {
       "key": "activation",
-      "value": 20.6,
+      "value": 22.5,
       "target": 90,
-      "note": "🎯 目標達成率 22.9%",
-      "noteEn": "🎯 22.9% of target",
-      "noteEs": "🎯 22.9% del objetivo",
+      "note": "🎯 目標達成率 25.0%",
+      "noteEn": "🎯 25.0% of target",
+      "noteEs": "🎯 25.0% del objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 20.7
+          "val": 21.8
         },
         {
           "id": "WYMTN",
-          "val": 13.8
+          "val": 15.7
         },
         {
           "id": "WYMY",
-          "val": 30.0
+          "val": 31.0
         },
         {
           "id": "WYUS/MUS",
-          "val": 25.9
+          "val": 32.1
         },
         {
           "id": "WYMX",
-          "val": 18.8
+          "val": 22.9
         }
       ]
     },
     {
       "key": "mau",
-      "value": 79.1,
+      "value": 96.6,
       "target": 50,
-      "note": "🚀 超標 29.1%",
-      "noteEn": "🚀 +29.1% over target",
-      "noteEs": "🚀 +29.1% sobre el objetivo",
+      "note": "🚀 超標 46.6%",
+      "noteEn": "🚀 +46.6% over target",
+      "noteEs": "🚀 +46.6% sobre el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 93.4
+          "val": 97.5
         },
         {
           "id": "WYMTN",
-          "val": 95.5
+          "val": 96.0
         },
         {
           "id": "WYMY",
-          "val": 96.6
+          "val": 99.1
         },
         {
           "id": "WYUS/MUS",
-          "val": 22.9
+          "val": 93.5
         },
         {
           "id": "WYMX",
-          "val": 13.8
+          "val": 93.0
         }
       ]
     },
     {
       "key": "avghours",
-      "value": 4.8,
+      "value": 11.0,
       "target": 30,
-      "note": "⏱️ 距目標 25.2 分鐘",
-      "noteEn": "⏱️ 25.2 min to target",
-      "noteEs": "⏱️ 25.2 min hasta el objetivo",
+      "note": "⏱️ 距目標 19.0 分鐘",
+      "noteEn": "⏱️ 19.0 min to target",
+      "noteEs": "⏱️ 19.0 min hasta el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 3.8
+          "val": 11.2
         },
         {
           "id": "WYMTN",
-          "val": 3.6
+          "val": 5.5
         },
         {
           "id": "WYMY",
-          "val": 8.1
+          "val": 14.7
         },
         {
           "id": "WYUS/MUS",
-          "val": 0.8
+          "val": 3.4
         },
         {
           "id": "WYMX",
-          "val": 5.1
+          "val": 13.8
         }
       ]
     }
@@ -96,86 +96,86 @@
   "sites": [
     {
       "id": "WYHQ",
-      "participants": 381,
-      "activationRate": 20.7
+      "participants": 401,
+      "activationRate": 21.8
     },
     {
       "id": "WYTN",
-      "participants": 132,
-      "activationRate": 13.8
+      "participants": 150,
+      "activationRate": 15.7
     },
     {
       "id": "WYMY",
-      "participants": 204,
-      "activationRate": 30.0
+      "participants": 212,
+      "activationRate": 31.0
     },
     {
       "id": "WYUS",
-      "participants": 48,
-      "activationRate": 25.9
+      "participants": 62,
+      "activationRate": 32.1
     },
     {
       "id": "WYMX",
-      "participants": 130,
-      "activationRate": 18.8
+      "participants": 158,
+      "activationRate": 22.9
     }
   ],
   "topLearners": [
     {
       "name": "Cyrus Ng",
       "site": "WYHQ",
-      "hours": 6.2
-    },
-    {
-      "name": "LUCIA BERNARDA RUIZ CARREÑO",
-      "site": "WYMX",
-      "hours": 3.6
-    },
-    {
-      "name": "Aiman Azmi",
-      "site": "WYMY",
-      "hours": 3.3
-    },
-    {
-      "name": "Giovanna Cano",
-      "site": "WYMX",
-      "hours": 3.0
-    },
-    {
-      "name": "PATRICIA IVONNE GOMEZ MARTINEZ",
-      "site": "WYMX",
-      "hours": 3.0
-    },
-    {
-      "name": "KL Lim",
-      "site": "WYMY",
-      "hours": 2.9
-    },
-    {
-      "name": "Jinghao Tee",
-      "site": "WYMY",
-      "hours": 2.7
-    },
-    {
-      "name": "Lin Zhuang",
-      "site": "WYMTN",
-      "hours": 2.2
-    },
-    {
-      "name": "Quanna Lin",
-      "site": "WYHQ",
-      "hours": 2.2
+      "hours": 12.8
     },
     {
       "name": "WH Yew",
       "site": "WYMY",
-      "hours": 2.1
+      "hours": 7.8
+    },
+    {
+      "name": "Quanna Lin",
+      "site": "WYHQ",
+      "hours": 6.3
+    },
+    {
+      "name": "Edan Kao",
+      "site": "WYHQ",
+      "hours": 6.0
+    },
+    {
+      "name": "SEBASTIAN QUINTANA FIERRO",
+      "site": "WYMX",
+      "hours": 5.9
+    },
+    {
+      "name": "Aiman Azmi",
+      "site": "WYMY",
+      "hours": 4.4
+    },
+    {
+      "name": "Gavin Rajkumar",
+      "site": "WYMY",
+      "hours": 4.2
+    },
+    {
+      "name": "Lana Cheng",
+      "site": "WYHQ",
+      "hours": 4.0
+    },
+    {
+      "name": "May Ong",
+      "site": "WYMY",
+      "hours": 4.0
+    },
+    {
+      "name": "LUCIA BERNARDA RUIZ CARREÑO",
+      "site": "WYMX",
+      "hours": 3.7
     }
   ],
   "compliance": {
-    "value": 0.4,
-    "note": "已完成 4 人 / 已啟用 895 人",
-    "noteEn": "4 completed / 895 activated",
-    "noteEs": "4 completadas / 895 activadas"
+    "value": 0.8,
+    "note": "已完成 8 人 / 已啟用 983 人",
+    "noteEn": "8 completed / 983 activated",
+    "noteEs": "8 completadas / 983 activadas"
   }
 }
