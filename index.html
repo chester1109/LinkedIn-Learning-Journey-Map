@@ -253,8 +253,6 @@
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
   .kpi { background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; padding: 16px 18px; box-shadow: var(--tile-shadow); display: flex; flex-direction: column; }
   .kpi-head { display: flex; align-items: flex-start; gap: 10px; }
-  .kpi-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
-  .kpi-ic svg { width: 19px; height: 19px; }
   .kpi-tt { flex: 1; min-width: 0; }
   .kpi-label { font-size: 13.5px; font-weight: 650; color: var(--ink); }
   .kpi-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
@@ -278,24 +276,31 @@
   .kpi-site .cmark { flex: none; width: 13px; text-align: center; font-weight: 700; }
   .kpi-site .code { flex: 1; color: var(--ink-2); font-weight: 600; }
   .kpi-site .r { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
-  .tone-green .kpi-ic { background: rgba(12, 122, 61, 0.10); color: var(--good); }
   .tone-green .kpi-val { color: var(--good); }
   .tone-green .kpi-tag { background: rgba(12, 122, 61, 0.10); color: var(--good); }
-  .tone-amber .kpi-ic { background: rgba(180, 120, 0, 0.12); color: #b47800; }
   .tone-amber .kpi-val { color: #b47800; }
   .tone-amber .kpi-tag { background: rgba(180, 120, 0, 0.12); color: #b47800; }
-  .tone-blue .kpi-ic { background: rgba(10, 102, 194, 0.10); color: var(--brand); }
   .tone-blue .kpi-val { color: var(--brand); }
   .tone-blue .kpi-tag { background: rgba(10, 102, 194, 0.10); color: var(--brand); }
   :root[data-theme="dark"] .tone-amber .kpi-val { color: #ffd166; }
-  :root[data-theme="dark"] .tone-amber .kpi-ic { background: rgba(255, 201, 77, 0.12); color: #ffd166; }
   :root[data-theme="dark"] .tone-amber .kpi-tag { background: rgba(255, 201, 77, 0.12); color: #ffd166; }
   :root[data-theme="dark"] .note-warn { color: #ffd166; }
   :root[data-theme="dark"] .note-bad { color: #f2705f; }
 
   .compliance { background: var(--card); border: 1px solid var(--hairline); border-radius: 16px; padding: 18px 20px; box-shadow: var(--tile-shadow); margin-bottom: 14px; }
-  .comp-ic { background: rgba(12, 122, 61, 0.10); color: var(--good); }
   .comp-metric { background: rgba(20, 33, 59, 0.06); color: var(--ink-2); }
+
+  /* 指標卡 icon:深色方塊 + 單色線條 */
+  .kpi-art {
+    flex: none; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center;
+    background: rgba(255, 255, 255, 0.035); border: 1px solid var(--hairline);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .kpi-art svg { width: 30px; height: 30px; overflow: visible; }
+  .art-activation { color: #34d399; }
+  .art-mau        { color: #fbbf24; }
+  .art-avghours   { color: #60a5fa; }
+  .art-path       { color: #a78bfa; }
   .comp-calc { margin-top: 3px; font-size: 12px; line-height: 1.45; color: var(--ink-2); opacity: 0.85; font-variant-numeric: tabular-nums; }
   .comp-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
   .comp-figure { flex: none; }
@@ -306,6 +311,65 @@
   .comp-val { font-size: 34px; font-weight: 680; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
   .comp-gap { text-align: right; }
   .comp-gap-v { display: block; font-size: 15px; font-weight: 700; color: var(--good); font-variant-numeric: tabular-nums; }
+  /* AI Learning Path 課程拆分 */
+  .comp-paths { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--hairline); }
+  .comp-paths-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+                       background: transparent; border: none; padding: 4px 0; cursor: pointer; font-family: inherit;
+                       font-size: 14px; font-weight: 650; color: var(--ink); }
+  .comp-paths-toggle:hover .cpt-l { color: #8ec5f5; }
+  .comp-paths-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+  .cpt-l { display: inline-flex; align-items: center; gap: 10px; transition: color 0.15s; }
+  .cpt-l svg { width: 18px; height: 18px; color: var(--ink-2); }
+  .cpt-r { display: inline-flex; align-items: center; gap: 10px; }
+  .cpt-chips { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--ink-2);
+               padding: 5px 12px; border-radius: 999px; border: 1px solid var(--hairline); background: rgba(255, 255, 255, 0.03); }
+  .cpt-chips b { color: var(--ink); margin-left: 2px; }
+  .cpt-sep { opacity: 0.4; }
+  .comp-paths-toggle .chev { flex: none; width: 17px; height: 17px; color: var(--ink-2); transition: transform 0.2s; }
+  .comp-paths-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .comp-groups { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+  .comp-groups[hidden] { display: none; }
+  .cg-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--hairline); border-radius: 14px; padding: 14px 16px; }
+  @media (max-width: 640px) { .cpt-chips { display: none; } }
+  .cg-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cg-hic { display: grid; place-items: center; width: 34px; height: 34px; color: #7ab8f0; }
+  .cg-card.mgr .cg-hic { color: #b69cf5; }
+  .cg-hic svg { width: 26px; height: 26px; }
+  .cg-head h3 { margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); }
+  .cg-count { font-size: 12.5px; font-weight: 600; padding: 4px 11px; border-radius: 999px; background: rgba(90, 164, 232, 0.16); color: #8ec5f5; }
+  .cg-count.mgr { background: rgba(147, 112, 239, 0.18); color: #c3b0f7; }
+  .cg-denom { margin-left: auto; font-size: 11.5px; color: var(--ink-2); opacity: 0.85; }
+  .cg-row { display: grid; grid-template-columns: 112px minmax(180px, 1.6fr) 110px minmax(140px, 1.4fr) auto; align-items: center; gap: 18px;
+            padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.025); border: 1px solid var(--hairline); }
+  .cg-row + .cg-row { margin-top: 8px; }
+  .cg-thumb { height: 62px; border-radius: 10px; display: grid; place-items: center; color: #ffffff; overflow: hidden;
+              background: linear-gradient(135deg, #1b3f9b, #3a6ff2); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+  .cg-thumb svg { width: 30px; height: 30px; filter: drop-shadow(0 0 8px rgba(160, 200, 255, 0.55)); }
+  .cg-thumb.has-img { background: #1a2336; padding: 0; }
+  .cg-thumb.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cg-thumb.t-bot { background: linear-gradient(135deg, #2a49c9, #6d5cf0); }
+  .cg-thumb.t-gear { background: linear-gradient(135deg, #3a2bb0, #7b3fe0); }
+  .cg-thumb.t-books { background: linear-gradient(135deg, #1d3aa8, #3d8df0); }
+  .cg-thumb.t-lead { background: linear-gradient(135deg, #16307f, #4f5fe8); }
+  .cg-title { font-size: 14.5px; font-weight: 650; color: var(--ink); line-height: 1.35; }
+  .cg-tag { display: inline-block; margin-top: 6px; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+            background: rgba(45, 212, 191, 0.14); color: #5fe0cf; }
+  .cg-tag.mgr { background: rgba(147, 112, 239, 0.2); color: #c9b6fa; }
+  .cg-lbl { display: block; font-size: 11.5px; color: var(--ink-2); margin-bottom: 4px; }
+  .cg-rate b { font-size: 22px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .cg-bar .comp-track { height: 8px; }
+  .cg-start { justify-self: end; display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 999px;
+              background: #0a66c2; color: #ffffff; font-size: 13.5px; font-weight: 650; text-decoration: none; white-space: nowrap;
+              box-shadow: 0 6px 16px rgba(10, 102, 194, 0.35); transition: filter 0.2s, transform 0.2s; }
+  .cg-start:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .cg-start:focus-visible { outline: 2px solid #7ab8f0; outline-offset: 2px; }
+  @media (max-width: 860px) {
+    .cg-row { grid-template-columns: 84px 1fr; row-gap: 10px; }
+    .cg-thumb { height: 52px; }
+    .cg-rate, .cg-bar { grid-column: 2; }
+    .cg-start { grid-column: 1 / -1; justify-self: stretch; justify-content: center; }
+    .cg-denom { margin-left: 0; width: 100%; }
+  }
   .st-good { color: var(--good); }
   .st-none { color: var(--ink-2); opacity: 0.55; }
   .st-warn { color: #b47800; }
@@ -799,7 +863,7 @@ var DASHBOARD_DATA = {
       desc: "第一次使用:啟用帳號步驟", descEn: "First time here: how to activate your account", descEs: "Primera vez: cómo activar tu cuenta" },
     { url: "LinkedIn_Learning_Platform_Guide.pdf",
       label: "平台操作指南", labelEn: "Platform user guide", labelEs: "Guía de uso de la plataforma",
-      desc: "課程搜尋、學習路徑、行動 App", descEn: "Finding courses, learning paths, mobile app", descEs: "Buscar cursos, rutas de aprendizaje, app móvil" }
+      desc: "平台介紹、AI 教練、學習技巧與 FAQ", descEn: "Platform overview, AI coaching, learning tips & FAQ", descEs: "Introducción, coaching con IA, consejos y FAQ" }
   ], // 頁首「前往 LinkedIn Learning」按鈕的目標網址; IT 可換成公司 SSO/專屬入口, 留空字串則隱藏按鈕
   kpis: [
     { key: "activation", tone: "green", status: "good", tag: "Global Success Metric #1",
@@ -831,8 +895,27 @@ var DASHBOARD_DATA = {
     value: null, target: 100, unit: "%",   // null = 尚無資料(顯示「—」);data.json 帶入後才有數字
     /* note 留空:真實註記(「已完成 N 人 / 已啟用 M 人」)由 data.json 帶入。
        原本內嵌「完訓率將自 2026 年 9 月 1 日起開始累計」,9/1 之後已過期,2026-09-03 移除。 */
-    note: null, noteEn: null, noteEs: null
+    note: null, noteEn: null, noteEs: null,
     /* 本卡不列據點分項(見 metrics.md 指標 4):只保留總體完訓率 */
+
+    /* 總體卡下方的課程拆分:All Employees(全員必修 3 門)/ Managers(主管加修 2 門)。
+       name 必須與 Learner Detail 的 Content Name 完全一致(data.json 依 name 對應)。
+       url = 各課 Start 按鈕連結(目前先用公司入口暫代,拿到各課網址後逐一替換)。
+       done / rate 一律留 null,由 data.json 帶入;沒資料就顯示「—」。 */
+    denomAll: null, denomMgr: null,
+    groups: [
+      { key: "all", icon: "team",
+        courses: [
+          { name: "AI Governance: Safety and Responsibility", icon: "shield", thumb: "photos/course-ai-governance.jpg", url: "https://www.linkedin.com/learning-login/share?account=514123418&forceAccount=true&redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Flearning%2Fpaths%2Fwiwynn-ai-governance-safety-and-responsibility%3FshareId=a7cb272b-e32f-428f-a9f7-167f8bb8afdd", done: null, rate: null },
+          { name: "AI Starter Zone: From Generative AI to AI Agents", icon: "bot", thumb: "photos/course-ai-starter-zone.jpg", url: "https://www.linkedin.com/learning-login/share?account=514123418&forceAccount=true&redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Flearning%2Fpaths%2Fwiwynn-ai-starter-zone-from-generative-ai-to-ai-agents%3FshareId=474f39e7-12f8-44b1-8048-c899597e6eaf", done: null, rate: null },
+          { name: "AI in Action: Turn Tools into Workday Productivity", icon: "gear", thumb: "photos/course-ai-in-action.jpg", url: "https://www.linkedin.com/learning-login/share?account=514123418&forceAccount=true&redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Flearning%2Fpaths%2Fwiwynn-ai-in-action-turn-tools-into-workday-productivity%3FshareId=91c2b83f-a465-4f4c-8564-eabe6a953199", done: null, rate: null }
+        ] },
+      { key: "mgr", icon: "person",
+        courses: [
+          { name: "AI Management Essentials", icon: "books", thumb: "photos/course-ai-management-essentials.jpg", url: "https://www.linkedin.com/learning-login/share?account=514123418&forceAccount=true&redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Flearning%2Fpaths%2Fwiwynn-ai-management-essentials%3FshareId=35ec4942-58ff-4763-8f3b-80418ee48235", done: null, rate: null },
+          { name: "AI Leadership", icon: "lead", thumb: "photos/course-ai-leadership.jpg", url: "https://www.linkedin.com/learning-login/share?account=514123418&forceAccount=true&redirect=https%3A%2F%2Fwww%2Elinkedin%2Ecom%2Flearning%2Fpaths%2Fwiwynn-ai-leadership%3FshareId=5575303c-a54b-45f4-a807-42238e94e697", done: null, rate: null }
+        ] }
+    ]
   },
   sites: [
     {
@@ -1052,6 +1135,8 @@ var I18N = {
     bcastAria: "活動推播",
     lbSoonTitle: "Top 10 Learner 排行榜", lbSoonSub: "目前尚無資料",
     lbNotice: "溫馨提醒：請以「本人親自觀看、實際學習」的方式參與。若透過其他非實際學習的方式累積時數，經查證屬實則不予採計，主辦單位保留檢視學習紀錄的權力。",
+    compAllEmp: "All Employees", compMgr: "Managers", compAllPaths: "{n} Learning Paths", compMgrPaths: "{n} Additional Learning Paths", compRate: "完成率", compDone: "已完成 {n} 人", compStart: "Start", compDenomAll: "分母:已啟用 {n} 人", compDenomMgr: "分母:已啟用主管 {n} 人",
+    compPathsToggle: "查看指定學習路徑（{n}）",
     locale: "zh-Hant"
   },
   en: {
@@ -1098,6 +1183,8 @@ var I18N = {
     bcastAria: "Campaign announcements",
     lbSoonTitle: "Top 10 Learner leaderboard", lbSoonSub: "No data available yet",
     lbNotice: "Friendly reminder: please take part by genuinely watching and learning yourself. Hours accumulated by any means other than real learning will not be counted once verified, and the organizer reserves the right to review learning records.",
+    compAllEmp: "All Employees", compMgr: "Managers", compAllPaths: "{n} Learning Paths", compMgrPaths: "{n} Additional Learning Paths", compRate: "Completion", compDone: "{n} completed", compStart: "Start", compDenomAll: "Base: {n} activated", compDenomMgr: "Base: {n} activated managers",
+    compPathsToggle: "Explore AI Learning Paths ({n})",
     locale: "en-US"
   },
   es: {
@@ -1144,6 +1231,8 @@ var I18N = {
     bcastAria: "Anuncios de campañas",
     lbSoonTitle: "Ranking Top 10 Learner", lbSoonSub: "Aún no hay datos",
     lbNotice: "Recordatorio: participa viendo y aprendiendo realmente por ti mismo. Las horas acumuladas por medios distintos al aprendizaje real no se contabilizarán si se verifica, y la organización se reserva el derecho de revisar los registros de aprendizaje.",
+    compAllEmp: "Todos los empleados", compMgr: "Gerentes", compAllPaths: "{n} Learning Paths", compMgrPaths: "{n} Learning Paths adicionales", compRate: "Finalización", compDone: "{n} completadas", compStart: "Empezar", compDenomAll: "Base: {n} activadas", compDenomMgr: "Base: {n} gerentes activados",
+    compPathsToggle: "Explorar AI Learning Paths ({n})",
     locale: "es-MX"
   }
 };
@@ -1404,13 +1493,29 @@ function renderDeltas() {
 /* ── 達標型 KPI + 合規卡渲染(取代原三個統計磁貼)────────────── */
 /* Top 10 累計起算日(與 tools/build_data.py 的 CUM_START 一致) */
 
+var compPathsOpen = false;
+try { compPathsOpen = localStorage.getItem("llmap-paths") === "1"; } catch (err) { compPathsOpen = false; }
 var kpiSitesOpen = false;
 try { kpiSitesOpen = localStorage.getItem("llmap-kpisites") === "1"; } catch (err) { kpiSitesOpen = false; }
-var KPI_ICONS = {
-  activation: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
-  mau: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
-  avghours: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+/* ── 指標卡 icon:深色方塊 + 單色線條(顏色由 .art-<key> 的 color 決定)─── */
+var KPI_ART = {
+  activation:
+    '<circle cx="9.5" cy="7" r="3.6"/><path d="M3 20v-1.2A5.3 5.3 0 0 1 8.3 13.5h2.4"/>' +
+    '<circle cx="17" cy="17" r="4.2"/><polyline points="15.2 17 16.5 18.3 18.9 15.8"/>',
+  mau:
+    '<polyline points="2 12 6 12 9 4.5 13.5 19.5 16.5 12 22 12"/>',
+  avghours:
+    '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.2 13.8"/>',
+  path:
+    '<circle cx="5.5" cy="18.5" r="2.4"/>' +
+    '<path d="M7.6 17.2C11 15.8 9.6 12 13 11.2S17 9.4 17.4 8.2"/>' +
+    '<circle cx="19" cy="5.6" r="3.4" fill="currentColor" stroke="none"/>' +
+    '<polyline points="17.5 5.7 18.6 6.8 20.6 4.6" stroke="#0f1728" stroke-width="1.7"/>'
 };
+function kpiArt(key) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    (KPI_ART[key] || KPI_ART.path) + '</svg>';
+}
 function renderKpis() {
   const wrap = document.getElementById("kpiSection");
   if (!wrap) return;
@@ -1427,7 +1532,7 @@ function renderKpis() {
     const tgtTxt = String(k.target) + (k.unit || "");
     card.innerHTML =
       '<div class="kpi-head">' +
-        '<div class="kpi-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (KPI_ICONS[k.key] || "") + '</svg></div>' +
+        '<div class="kpi-art art-' + esc(k.key || "path") + '" aria-hidden="true">' + kpiArt(k.key) + '</div>' +
         '<div class="kpi-tt"><div class="kpi-label">' + esc(L(k, "label")) + '</div>' +
           (sub ? '<div class="kpi-sub">' + esc(sub) + '</div>' : '') +
         '</div>' +
@@ -1450,7 +1555,7 @@ function renderCompliance() {
   const bigTxt = hasVal ? (c.value + (c.unit || "")) : "—";
   box.innerHTML =
     '<div class="kpi-head">' +
-      '<div class="kpi-ic comp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>' +
+      '<div class="kpi-art art-path" aria-hidden="true">' + kpiArt("path") + '</div>' +
       '<div class="kpi-tt"><div class="kpi-label">' + esc(L(c, "label")) + '</div>' +
         (L(c, "calc") ? '<div class="comp-calc">' + esc(L(c, "calc")) + '</div>' : '') +
       '</div>' +
@@ -1461,8 +1566,77 @@ function renderCompliance() {
         (L(c, "note") ? '<div class="kpi-sub">' + esc(L(c, "note")) + '</div>' : '') +
       '</div>' +
       '<div class="comp-progress"><div class="comp-track"><i style="width:' + (hasVal ? clampRate(Number(c.value)) : 0) + '%"></i></div></div>' +
-    '</div>';
+    '</div>' + compPathsToggleHtml(c);
   /* 本卡刻意不做據點分項(見 metrics.md 指標 4) */
+}
+
+
+/* ── AI Learning Path 課程拆分(All Employees / Managers)────────────── */
+var COMP_ICONS = {
+  team: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M12 15l-1.5 3 1.5 3 1.5-3z"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+  bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2"/><circle cx="15" cy="14" r="1.2"/><path d="M2 13v3M22 13v3"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  books: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/>',
+  lead: '<path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/>'
+};
+function compSvg(k) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (COMP_ICONS[k] || COMP_ICONS.shield) + '</svg>';
+}
+function compPathsToggleHtml(c) {
+  const groups = (c && c.groups) || [];
+  if (!groups.length) return "";
+  const cnt = function (k) { const g = groups.find(function (x) { return x.key === k; }); return g ? (g.courses || []).length : 0; };
+  const total = groups.reduce(function (s, g) { return s + (g.courses || []).length; }, 0);
+  return '<div class="comp-paths">' +
+      '<button class="comp-paths-toggle" type="button" aria-controls="compPaths" aria-expanded="' + (compPathsOpen ? "true" : "false") + '">' +
+        '<span class="cpt-l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>' +
+          '<span>' + esc(T("compPathsToggle").replace("{n}", total)) + '</span></span>' +
+        '<span class="cpt-r"><span class="cpt-chips">' +
+          '<span>' + esc(T("compAllEmp")) + ' <b>' + cnt("all") + '</b></span><span class="cpt-sep" aria-hidden="true">|</span>' +
+          '<span>' + esc(T("compMgr")) + ' <b>' + cnt("mgr") + '</b></span></span>' +
+          '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>' +
+      '</button>' +
+      '<div class="comp-groups" id="compPaths"' + (compPathsOpen ? "" : " hidden") + '></div>' +
+    '</div>';
+}
+function renderCompGroups() {
+  const box = document.getElementById("compPaths");
+  if (!box) return;
+  const c = DASHBOARD_DATA.compliance;
+  const groups = (c && c.groups) || [];
+  if (!groups.length) { box.innerHTML = ""; return; }
+  box.innerHTML = groups.map(function (g) {
+    const isMgr = g.key === "mgr";
+    const n = (g.courses || []).length;
+    const denom = isMgr ? c.denomMgr : c.denomAll;
+    const title = isMgr ? T("compMgr") : T("compAllEmp");
+    const count = (isMgr ? T("compMgrPaths") : T("compAllPaths")).replace("{n}", n);
+    const denomTxt = isNum(denom) ? (isMgr ? T("compDenomMgr") : T("compDenomAll")).replace("{n}", Number(denom).toLocaleString(T("locale"))) : "";
+    const rows = (g.courses || []).map(function (x) {
+      const ok = isNum(x.rate);
+      const rateTxt = ok ? (x.rate + "%") : "—";
+      const doneTxt = isNum(x.done) ? T("compDone").replace("{n}", Number(x.done).toLocaleString(T("locale"))) : T("compDone").replace("{n}", "—");
+      return '<div class="cg-row">' +
+          (x.thumb
+            ? '<div class="cg-thumb has-img"><img src="' + esc(x.thumb) + '" alt="" loading="lazy"></div>'
+            : '<div class="cg-thumb t-' + esc(x.icon || "shield") + '">' + compSvg(x.icon) + '</div>') +
+          '<div class="cg-name"><div class="cg-title">' + esc(x.name) + '</div>' +
+            '<span class="cg-tag' + (isMgr ? " mgr" : "") + '">' + esc(title) + '</span></div>' +
+          '<div class="cg-rate"><span class="cg-lbl">' + esc(T("compRate")) + '</span><b>' + esc(rateTxt) + '</b></div>' +
+          '<div class="cg-bar"><span class="cg-lbl">' + esc(doneTxt) + '</span>' +
+            '<div class="comp-track"><i style="width:' + (ok ? clampRate(Number(x.rate)) : 0) + '%"></i></div></div>' +
+          (x.url ? '<a class="cg-start" href="' + esc(x.url) + '" target="_blank" rel="noopener noreferrer">' + esc(T("compStart")) + ' <span aria-hidden="true">→</span></a>' : '') +
+        '</div>';
+    }).join("");
+    return '<section class="cg-card' + (isMgr ? " mgr" : "") + '" aria-label="' + esc(title) + '">' +
+        '<div class="cg-head"><span class="cg-hic" aria-hidden="true">' + compSvg(g.icon) + '</span>' +
+          '<h3>' + esc(title) + '</h3><span class="cg-count' + (isMgr ? " mgr" : "") + '">' + esc(count) + '</span>' +
+          (denomTxt ? '<span class="cg-denom">' + esc(denomTxt) + '</span>' : '') +
+        '</div>' + rows +
+      '</section>';
+  }).join("");
 }
 
 /* ── 活動推播牆(橫向輪播;可放多張活動 EDM)────────────────── */
@@ -1597,6 +1771,7 @@ function renderDashboard(data) {
   if (data) DASHBOARD_DATA = data;
   renderKpis();
   renderCompliance();
+  renderCompGroups();
   renderBroadcasts();
   renderSites();
   renderTopLearners();
@@ -1872,6 +2047,17 @@ function closeEvent() {
   if (target && target.focus) target.focus();
 }
 
+/* KPI #4:指定學習路徑 收合/展開(狀態存 localStorage) */
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest && e.target.closest(".comp-paths-toggle");
+  if (!btn) return;
+  compPathsOpen = !compPathsOpen;
+  try { localStorage.setItem("llmap-paths", compPathsOpen ? "1" : "0"); } catch (err) { /* 隱私模式忽略 */ }
+  const panel = document.getElementById("compPaths");
+  if (panel) panel.hidden = !compPathsOpen;
+  btn.setAttribute("aria-expanded", compPathsOpen ? "true" : "false");
+});
+
 /* KPI 各據點分項:收合/展開(三張卡同步,狀態存 localStorage) */
 document.addEventListener("click", function (e) {
   const btn = e.target.closest && e.target.closest(".kpi-sites-toggle");
@@ -1999,6 +2185,20 @@ function applyDataPatch(p) {
     if (typeof c.note === "string") { dst.note = c.note; dst.noteEn = c.noteEn || c.note; dst.noteEs = c.noteEs || c.note; }
     if (typeof c.gap === "string") dst.gap = c.gap;
     /* 本卡只顯示總體完訓率,不吃據點分項(c.sites 已移除) */
+    if (isNum(c.denomAll)) dst.denomAll = c.denomAll;
+    if (isNum(c.denomMgr)) dst.denomMgr = c.denomMgr;
+    /* 課程明細:依 name 對應到 groups 裡的課程(只覆寫數字) */
+    if (Array.isArray(c.courses) && Array.isArray(dst.groups)) {
+      for (const src of c.courses) {
+        if (!src || !src.name) continue;
+        for (const g of dst.groups) {
+          const hit = (g.courses || []).find(function (x) { return x.name === src.name; });
+          if (!hit) continue;
+          if (isNum(src.done)) hit.done = src.done;
+          if (isNum(src.rate)) hit.rate = src.rate;
+        }
+      }
+    }
     touched = true;
   }
 
