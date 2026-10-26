@@ -64,31 +64,31 @@
     },
     {
       "key": "avghours",
-      "value": 273.5,
+      "value": 187.6,
       "target": 30,
-      "note": "⏱️ 達標 +243.5 分鐘",
-      "noteEn": "⏱️ +243.5 min over target",
-      "noteEs": "⏱️ +243.5 min sobre el objetivo",
+      "note": "⏱️ 達標 +157.6 分鐘",
+      "noteEn": "⏱️ +157.6 min over target",
+      "noteEs": "⏱️ +157.6 min sobre el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 269.4
+          "val": 151.2
         },
         {
           "id": "WYMTN",
-          "val": 143.2
+          "val": 135.6
         },
         {
           "id": "WYMY",
-          "val": 616.4
+          "val": 451.5
         },
         {
           "id": "WYUS/MUS",
-          "val": 17.2
+          "val": 16.0
         },
         {
           "id": "WYMX",
-          "val": 74.9
+          "val": 72.1
         }
       ]
     }
