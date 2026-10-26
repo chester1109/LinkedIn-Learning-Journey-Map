@@ -393,6 +393,7 @@
   .bslide.bare { background: #06080f; } /* 滿版 EDM 兩側留白用黑色,不用 tone 漸層 */
   .bslide.bare .bdeco-img { background-size: contain; background-repeat: no-repeat; background-position: center; }
   .bslide.bare .bdeco-img::after { background: linear-gradient(to top, rgba(8, 16, 34, 0.32) 0%, rgba(8, 16, 34, 0.16) 55%, rgba(8, 16, 34, 0.24) 100%); }
+  .bslide.bare.no-dim .bdeco-img::after { display: none; }
   .bare-link { position: absolute; inset: 0; display: block; z-index: 1; cursor: pointer; }
   .bare-link:focus-visible { outline: 3px solid var(--glow); outline-offset: -3px; }
   .bdeco-img::before { content: none; }
@@ -1080,7 +1081,12 @@ var DASHBOARD_DATA = {
   topLearners: [],
   /* 活動推播牆:一張 = 一個活動 EDM;可放多筆。tone: party/challenge/leader */
   broadcasts: [
-    /* bare: true = 整張 EDM 滿版顯示,不疊標題/文案/CTA(圖上已有完整資訊) */
+    /* bare: true = 整張 EDM 滿版顯示,不疊標題/文案/CTA(圖上已有完整資訊)
+       dim: false = 不加暗色遮罩(淺底、字多的公告用,避免字變灰) */
+    /* 2026-10-26 新增:Top 10 活動規則補充說明(放第一張;點擊開原圖方便閱讀) */
+    { tone: "leader", bare: true, dim: false, image: "photos/top10-guidelines.jpg",
+      link: "photos/top10-guidelines.jpg",
+      title: "Top 10 Learner 活動規則補充說明", titleEn: "Top 10 Learner Supplementary Guidelines", titleEs: "Pautas complementarias del Top 10 de Aprendices" },
     { tone: "leader", bare: true, image: "photos/top10-leaderboard-edm.jpg",
       link: "https://www.linkedin.com/learning/?u=514123418",
       title: "Top 10 Learner 排行榜挑戰", titleEn: "Top 10 Learner Leaderboard Challenge", titleEs: "Reto del Top 10 de Aprendices" }
@@ -1693,7 +1699,7 @@ function renderBroadcasts() {
       const bareInner = bareLink
         ? '<a class="bare-link" href="' + esc(bareLink) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(L(b, "title")) + '">' + bg + "</a>"
         : bg;
-      slidesH += '<div class="bslide bare tone-' + esc(b.tone || "party") + (b.image ? " has-img" : "") + (i === 0 ? " on" : "") + '">' + bareInner + "</div>";
+      slidesH += '<div class="bslide bare tone-' + esc(b.tone || "party") + (b.image ? " has-img" : "") + (b.dim === false ? " no-dim" : "") + (i === 0 ? " on" : "") + '">' + bareInner + "</div>";
       dotsH += '<button type="button" aria-label="' + esc(L(b, "title")) + '"' + (i === 0 ? ' class="on" aria-current="true"' : "") + "></button>";
       continue;
     }
