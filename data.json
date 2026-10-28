@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2026-10-26T10:00:00+08:00",
-  "dataAsOf": "2026-10-25",
+  "updatedAt": "2026-10-27T10:00:00+08:00",
+  "dataAsOf": "2026-10-27",
   "kpis": [
     {
       "key": "activation",
-      "value": 34.1,
+      "value": 34.2,
       "target": 90,
-      "note": "🎯 目標達成率 37.9%",
-      "noteEn": "🎯 37.9% of target",
-      "noteEs": "🎯 37.9% del objetivo",
+      "note": "🎯 目標達成率 38.0%",
+      "noteEn": "🎯 38.0% of target",
+      "noteEs": "🎯 38.0% del objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 36.5
+          "val": 36.8
         },
         {
           "id": "WYMTN",
@@ -20,7 +20,7 @@
         },
         {
           "id": "WYMY",
-          "val": 41.5
+          "val": 41.3
         },
         {
           "id": "WYUS/MUS",
@@ -28,25 +28,25 @@
         },
         {
           "id": "WYMX",
-          "val": 28.9
+          "val": 29.1
         }
       ]
     },
     {
       "key": "mau",
-      "value": 43.7,
+      "value": 43.9,
       "target": 50,
-      "note": "🎯 距目標 6.3%",
-      "noteEn": "🎯 6.3% to target",
-      "noteEs": "🎯 6.3% hasta el objetivo",
+      "note": "🎯 距目標 6.1%",
+      "noteEn": "🎯 6.1% to target",
+      "noteEs": "🎯 6.1% hasta el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 48.4
+          "val": 48.7
         },
         {
           "id": "WYMTN",
-          "val": 35.3
+          "val": 35.1
         },
         {
           "id": "WYMY",
@@ -58,37 +58,37 @@
         },
         {
           "id": "WYMX",
-          "val": 37.4
+          "val": 37.7
         }
       ]
     },
     {
       "key": "avghours",
-      "value": 187.6,
+      "value": 186.3,
       "target": 30,
-      "note": "⏱️ 達標 +157.6 分鐘",
-      "noteEn": "⏱️ +157.6 min over target",
-      "noteEs": "⏱️ +157.6 min sobre el objetivo",
+      "note": "⏱️ 達標 +156.3 分鐘",
+      "noteEn": "⏱️ +156.3 min over target",
+      "noteEs": "⏱️ +156.3 min sobre el objetivo",
       "sites": [
         {
           "id": "WYHQ",
-          "val": 151.2
+          "val": 148.7
         },
         {
           "id": "WYMTN",
-          "val": 135.6
+          "val": 136.1
         },
         {
           "id": "WYMY",
-          "val": 451.5
+          "val": 450.0
         },
         {
           "id": "WYUS/MUS",
-          "val": 16.0
+          "val": 16.1
         },
         {
           "id": "WYMX",
-          "val": 72.1
+          "val": 74.5
         }
       ]
     }
@@ -96,18 +96,18 @@
   "sites": [
     {
       "id": "WYHQ",
-      "participants": 705,
-      "activationRate": 36.5
+      "participants": 714,
+      "activationRate": 36.8
     },
     {
       "id": "WYTN",
-      "participants": 286,
+      "participants": 285,
       "activationRate": 28.3
     },
     {
       "id": "WYMY",
       "participants": 291,
-      "activationRate": 41.5
+      "activationRate": 41.3
     },
     {
       "id": "WYUS",
@@ -116,25 +116,25 @@
     },
     {
       "id": "WYMX",
-      "participants": 206,
-      "activationRate": 28.9
+      "participants": 207,
+      "activationRate": 29.1
     }
   ],
   "topLearners": [
     {
       "name": "Lin Zhuang",
       "site": "WYMTN",
-      "hours": 895.7
+      "hours": 895.9
     },
     {
       "name": "WH Yew",
       "site": "WYMY",
-      "hours": 839.6
+      "hours": 868.4
     },
     {
       "name": "Cyrus Ng",
       "site": "WYHQ",
-      "hours": 712.6
+      "hours": 721.2
     },
     {
       "name": "Edan Kao",
@@ -149,12 +149,12 @@
     {
       "name": "Richard Ruan",
       "site": "WYHQ",
-      "hours": 506.8
+      "hours": 509.8
     },
     {
       "name": "Gavin Rajkumar",
       "site": "WYMY",
-      "hours": 474.1
+      "hours": 481.1
     },
     {
       "name": "Jessica Melody",
@@ -174,11 +174,11 @@
   ],
   "compliance": {
     "value": 4.6,
-    "note": "已完成 72 人 / 已啟用 1561 人",
-    "noteEn": "72 completed / 1561 activated",
-    "noteEs": "72 completadas / 1561 activadas",
-    "denomAll": 1561,
-    "denomMgr": 191,
+    "note": "已完成 73 人 / 已啟用 1570 人",
+    "noteEn": "73 completed / 1570 activated",
+    "noteEs": "73 completadas / 1570 activadas",
+    "denomAll": 1570,
+    "denomMgr": 192,
     "courses": [
       {
         "name": "AI Leadership",
@@ -195,7 +195,7 @@
       {
         "name": "AI in Action: Turn Tools into Workday Productivity",
         "group": "all",
-        "done": 76,
+        "done": 77,
         "rate": 4.9
       },
       {
@@ -207,7 +207,7 @@
       {
         "name": "AI Governance: Safety and Responsibility",
         "group": "all",
-        "done": 180,
+        "done": 181,
         "rate": 11.5
       }
     ]
